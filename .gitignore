@@ -1,3 +1,5 @@
 
 #Ignore the images since they are too large
 Images/
+
+.spyproject/
