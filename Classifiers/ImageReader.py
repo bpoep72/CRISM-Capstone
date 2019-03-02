@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-#Read in the image from the .img file format where there is a seperate .hdr
-#file that outlines the contents of the .img file. This reader's principle task
-#is to take these two files and import only the wavelengths that we need, these
-#are defined in /Resources/bands.txt. Bands and wavelength are interchanged
-#frequently in this file, sorry.
+'''
+Read in the image from the .img file format where there is a seperate .hdr
+file that outlines the contents of the .img file. This reader's principle task
+is to take these two files and import only the wavelengths that we need, these
+are defined in /Resources/bands.txt. Bands and wavelength are interchanged
+frequently in this file, sorry.
+'''
 
 import spectral.io.envi as envi
 
@@ -24,11 +26,13 @@ class ImageReader:
     def __del__(self):
         pass
     
-    #Match the bands that came from the bands.txt file to the bands from the
-    #header file. Make an array of the int indices of the bands in header_bands
-    #Params: none
-    #Return: int[]: the indices in header_bands of the values that matches
-    #           a value from the specific bands
+    '''
+    Match the bands that came from the bands.txt file to the bands from the
+    header file. Make an array of the int indices of the bands in header_bands
+    Params: none
+    Return: int[]: the indices in header_bands of the values that matches
+               a value from the specific bands
+    '''
     def match_bands(self):
         
         matched_bands = []
@@ -46,10 +50,12 @@ class ImageReader:
             
         return matched_bands
     
-    #Read the wavelengths from the header file for the original image
-    #Params: none
-    #Return: float[]: the wavelength that are used in the original image
-    #Throws: FileNotFoundError if file does not exist
+    '''
+    Read the wavelengths from the header file for the original image
+    Params: none
+    Return: float[]: the wavelength that are used in the original image
+    Throws: FileNotFoundError if file does not exist
+    '''
     def get_header_wavelengths(self):
         header = self.image_file + ".hdr"
        
@@ -78,13 +84,15 @@ class ImageReader:
                 header_bands[i] = float(header_bands[i])
             
             return header_bands
-
-    #The header has a field where it tells of a value the instrument assigns
-    #to a pixel value whenever the data be ignored. This function finds that
-    #value.
-    #Params: none
-    #Return: float: the ignore value
-    #Throws: FileNotFoundError if file does not exist
+    
+    '''
+    The header has a field where it tells of a value the instrument assigns
+    to a pixel value whenever the data be ignored. This function finds that
+    value.
+    Params: none
+    Return: float: the ignore value
+    Throws: FileNotFoundError if file does not exist
+    '''
     def get_header_data_ignore_value(self):
         header = self.image_file + ".hdr"
        
@@ -104,11 +112,13 @@ class ImageReader:
             
             return float(ignore_value)
 
-    #Get the specific bands that we work with for this project so that the 
-    #image can be loaded according to these bands.
-    #Params: none
-    #Return: float[]: the bands from bands.txt
-    #Throws: FileNotFoundError if file does not exist
+    '''
+    Get the specific bands that we work with for this project so that the 
+    image can be loaded according to these bands.
+    Params: none
+    Return: float[]: the bands from bands.txt
+    Throws: FileNotFoundError if file does not exist
+    '''
     def get_bands_file(self):
         #open the resource file
         bands_file = open(self.bands_file_path, 'r')
@@ -123,9 +133,12 @@ class ImageReader:
         #return the bands as floats
         return bands
     
-    #Read in the original image using all the original bands
-    #Params: none
-    #Return:
+    '''
+    Read in the original image using all the original bands
+    Params: none
+    Return: nparray[][][]: a matrix of the image with all of the bands from the
+            parent file
+    '''
     def get_raw_original_image(self):
         
         #the string path of the image
@@ -139,11 +152,13 @@ class ImageReader:
         
         return image
         
-        
-    #Get the image using the specific bands that are defiend in bands.txt
-    #this should be the default.
-    #Params: none
-    #Return: 
+    '''
+    Get the image using the specific bands that are defiend in bands.txt
+    this should be the default.
+    Params: none
+    Return: nparray[][][]: a matrix of the image with only the bands from the
+            bands.txt file
+    '''
     def get_raw_image(self):
         
         #the string path of the image
