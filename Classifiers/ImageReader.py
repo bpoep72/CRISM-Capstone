@@ -6,6 +6,8 @@
 #are defined in /Resources/bands.txt. Bands and wavelength are interchanged
 #frequently in this file, sorry.
 
+import spectral.io.envi as envi
+
 class ImageReader:
     
     #where the specific bands we plan to use is defined
@@ -16,9 +18,8 @@ class ImageReader:
     def __init__(self, imageFile):
         self.image_file = imageFile
         self.header_bands = self.get_header_wavelengths()
-        self.specific_bands = self.get_bands()
+        self.specific_bands = self.get_bands_file()
         self.ignore_value = self.get_header_data_ignore_value()
-        self.matched_bands = self.match_bands()
         
     def __del__(self):
         pass
@@ -82,7 +83,7 @@ class ImageReader:
     #to a pixel value whenever the data be ignored. This function finds that
     #value.
     #Params: none
-    #Return: string: the ignore value in scientific notation
+    #Return: float: the ignore value
     #Throws: FileNotFoundError if file does not exist
     def get_header_data_ignore_value(self):
         header = self.image_file + ".hdr"
@@ -95,19 +96,20 @@ class ImageReader:
             word = "data ignore value = "
             start_index = file.find(word) + len(word)
             
+            #the end of line character
             word = "\n"
             end_index = file.find(word, start_index)
             
             ignore_value = file[start_index:end_index]
             
-            return ignore_value
+            return float(ignore_value)
 
     #Get the specific bands that we work with for this project so that the 
     #image can be loaded according to these bands.
     #Params: none
     #Return: float[]: the bands from bands.txt
     #Throws: FileNotFoundError if file does not exist
-    def get_bands(self):
+    def get_bands_file(self):
         #open the resource file
         bands_file = open(self.bands_file_path, 'r')
         
@@ -124,26 +126,40 @@ class ImageReader:
     #Read in the original image using all the original bands
     #Params: none
     #Return:
-    def get_original_image(self):
+    def get_raw_original_image(self):
         
-        with open(self.image_dir + self.image_file):
-            pass
+        #the string path of the image
+        full_path = self.image_dir + self.image_file
+        
+        #open the image reading in its header then the .img file
+        image_file = envi.open(full_path + ".hdr", full_path)
+        
+        #load the image into memory
+        image = image_file.load()
+        
+        return image
+        
         
     #Get the image using the specific bands that are defiend in bands.txt
     #this should be the default.
     #Params: none
     #Return: 
-    def get_image(self):
+    def get_raw_image(self):
         
-        with open(self.image_dir + self.image_file):
-            pass
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        #the string path of the image
+        full_path = self.image_dir + self.image_file
+        
+        #open the image reading in its header then the .img file
+        image_file = envi.open(full_path + ".hdr", full_path)
+        
+        #load the image into memory
+        original_image = image_file.load()
+        
+        bands = self.match_bands()
+        
+        #get the image with only the bands we plan to use
+        image = original_image.read_bands(bands)
+        
+        return image
+        
     
