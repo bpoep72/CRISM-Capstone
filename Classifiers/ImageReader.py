@@ -9,19 +9,26 @@ frequently in this file, sorry.
 '''
 
 import spectral.io.envi as envi
+import CRISMImage
+import os
 
 class ImageReader:
-    
+
+    parent_directory = os.path.join(os.path.dirname(__file__), '..')
+
     #where the specific bands we plan to use is defined
-    bands_file_path = "../Resources/bands.txt"
+    bands_file_path = os.path.join(parent_directory, 'Resources', 'bands.txt')
     #head to the images directory
-    image_dir = "../Images/"
+    image_dir = os.path.join(parent_directory, 'Images')
     
     def __init__(self, imageFile):
         self.image_file = imageFile
-        self.header_bands = self.get_header_wavelengths()
         self.specific_bands = self.get_bands_file()
-        self.ignore_value = self.get_header_data_ignore_value()
+
+        #incase of empty initialization string
+        if(len(imageFile) != 0):
+            self.header_bands = self.get_header_wavelengths()
+            self.ignore_value = self.get_header_data_ignore_value()
         
     def __del__(self):
         pass
@@ -129,6 +136,7 @@ class ImageReader:
         #remove the trailing new line character
         for i in range(len(bands)):
             bands[i] = float(bands[i].replace("\n", ""))
+
             
         #return the bands as floats
         return bands
@@ -177,4 +185,6 @@ class ImageReader:
         
         return image
         
+if __name__ == '__main__':
     
+    imr = ImageReader("")
