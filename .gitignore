@@ -2,5 +2,6 @@
 #Ignore the images since they are too large
 Images/
 
-#ignore spyder IDE files
+#ignore IDE files
 .spyproject/
+.vscode/
