@@ -9,6 +9,7 @@ data will be achieved through this wrapper.
 """
 
 import numpy as np
+import ImageReader
 
 class CRISMImage:
     
@@ -49,3 +50,7 @@ class CRISMImage:
         band = self.bands.find(wave_length)
         
         return self.get_band_by_number(band)
+
+
+if __name__ == "__main__":
+    pass

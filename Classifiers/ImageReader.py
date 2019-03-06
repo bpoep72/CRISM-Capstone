@@ -9,13 +9,16 @@ frequently in this file, sorry.
 '''
 
 import spectral.io.envi as envi
+import os
 
 class ImageReader:
+
+    parent_directory = os.path.join(os.path.dirname(__file__), '..')
     
     #where the specific bands we plan to use is defined
-    bands_file_path = "../Resources/bands.txt"
+    bands_file_path = os.path.join(parent_directory, 'Resources', 'bands.txt')
     #head to the images directory
-    image_dir = "../Images/"
+    image_dir = os.path.join(parent_directory, 'Images')
     
     def __init__(self, imageFile):
         self.image_file = imageFile
@@ -60,7 +63,7 @@ class ImageReader:
         header = self.image_file + ".hdr"
        
         #get the wavelenghts from the header file
-        with open(self.image_dir + header) as header_file:
+        with open(os.path.join(self.image_dir, header)) as header_file:
             file = header_file.read()
             
             #get the index where the waves start at
@@ -97,7 +100,7 @@ class ImageReader:
         header = self.image_file + ".hdr"
        
         #get the data ignore value from the header file
-        with open(self.image_dir + header) as header_file:
+        with open(os.path.join(self.image_dir, header)) as header_file:
             file = header_file.read()
             
             #get the index where the data ignore value is at
@@ -142,7 +145,7 @@ class ImageReader:
     def get_raw_original_image(self):
         
         #the string path of the image
-        full_path = self.image_dir + self.image_file
+        full_path = os.path.join(self.image_dir, self.image_file)
         
         #open the image reading in its header then the .img file
         image_file = envi.open(full_path + ".hdr", full_path)
@@ -162,7 +165,7 @@ class ImageReader:
     def get_raw_image(self):
         
         #the string path of the image
-        full_path = self.image_dir + self.image_file
+        full_path = os.path.join(self.image_dir, self.image_file)
         
         #open the image reading in its header then the .img file
         image_file = envi.open(full_path + ".hdr", full_path)
@@ -177,4 +180,13 @@ class ImageReader:
         
         return image
         
+if __name__ == "__main__":
     
+    imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
+
+    print(len(imr.get_bands_file()))
+
+    print(imr.get_header_data_ignore_value())
+
+    print(len(imr.get_header_wavelengths()))
+
