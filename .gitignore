@@ -7,4 +7,4 @@ Images/
 .vscode/
 
 #ignore compiled python
-Classifiers/__pycache__/
+*.pyc
