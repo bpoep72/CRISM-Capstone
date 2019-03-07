@@ -5,3 +5,7 @@ Images/
 #ignore IDE files
 .spyproject/
 .vscode/
+
+#ignore compiled python
+*.pyc
+*/__pycache__/
