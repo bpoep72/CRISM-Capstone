@@ -12,7 +12,7 @@ import os
 
 import spectral.io.envi as envi
 
-from CRISMImage import CRISMImage
+from classifiers.CRISMImage import CRISMImage
 
 class ImageReader:
 
