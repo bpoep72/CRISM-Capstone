@@ -10,9 +10,11 @@ frequently in this file, sorry.
 
 import spectral.io.envi as envi
 import os
+import CRISMImage as crism_image_pack
 
 class ImageReader:
 
+    #root folder of the project
     parent_directory = os.path.join(os.path.dirname(__file__), '..')
     
     #where the specific bands we plan to use is defined
@@ -31,7 +33,10 @@ class ImageReader:
     
     '''
     Match the bands that came from the bands.txt file to the bands from the
-    header file. Make an array of the int indices of the bands in header_bands
+    header file. Make an array of the int indices of the bands in header_bands.
+    We do this because the read_bands method expects an array of ints that are
+    the indices of the bands from the original file
+
     Params: none
     Return: int[]: the indices in header_bands of the values that matches
                a value from the specific bands
@@ -139,8 +144,7 @@ class ImageReader:
     '''
     Read in the original image using all the original bands
     Params: none
-    Return: nparray[][][]: a matrix of the image with all of the bands from the
-            parent file
+    Return: CRISMImage: The image with the wrapper class
     '''
     def get_raw_original_image(self):
         
@@ -152,15 +156,17 @@ class ImageReader:
         
         #load the image into memory
         image = image_file.load()
-        
-        return image
+
+        #Put all data up to here into the CRISMImage wrapper class
+        crism_image = crism_image_pack.CRISMImage(image, self.image_file, self.specific_bands, self.header_bands, self.ignore_value)
+
+        return crism_image
         
     '''
     Get the image using the specific bands that are defiend in bands.txt
     this should be the default.
     Params: none
-    Return: nparray[][][]: a matrix of the image with only the bands from the
-            bands.txt file
+    Return: Return: CRISMImage: The image with the wrapper class
     '''
     def get_raw_image(self):
         
@@ -178,7 +184,10 @@ class ImageReader:
         #get the image with only the bands we plan to use
         image = original_image.read_bands(bands)
         
-        return image
+        #Put all data up to here into the CRISMImage wrapper class
+        crism_image = crism_image_pack.CRISMImage(image, self.image_file, self.specific_bands, self.header_bands, self.ignore_value)
+
+        return crism_image
         
 if __name__ == "__main__":
     
@@ -190,3 +199,4 @@ if __name__ == "__main__":
 
     print(len(imr.get_header_wavelengths()))
 
+    img = imr.get_raw_image()
