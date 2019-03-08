@@ -9,3 +9,6 @@ Images/
 #ignore compiled python
 *.pyc
 */__pycache__/
+
+#ignore test file
+.pytest_cache/
