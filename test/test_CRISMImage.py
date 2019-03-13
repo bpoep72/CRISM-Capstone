@@ -1,6 +1,5 @@
 
 import unittest
-import classifiers
 import os.path
 import sys
 #add the root of the project to the system path 
@@ -12,7 +11,9 @@ from classifiers.imagereader import ImageReader
 class test_CRISMImage(unittest.TestCase):
 
     #the image from which all oracle data was derived for these tests
-    image = "HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img"
+    imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
+
+    image = imr.get_raw_image()
 
     '''
         Objective: Ensure that CRISMImage.get_new_ref() can convert an old band reference
@@ -20,16 +21,23 @@ class test_CRISMImage(unittest.TestCase):
     '''
     def test_get_new_ref(self):
         
-        imr = ImageReader(self.image)
-
-        image = imr.get_raw_image()
-
         #old ref should be not exist in the new image
-        value = image.get_new_ref(1)
+        value = self.image.get_new_ref(1)
         self.assertEqual(value, -1)
 
         #old ref should exist in the new image
-        value = image.get_new_ref(3)
+        value = self.image.get_new_ref(3)
         self.assertEqual(value, 0)
 
+    def test_get_band_max(self):
+
+        value = self.image.get_band_max(0)
+
+        self.assertAlmostEqual(value, 0.23118185)
+
+    def test_get_band_min(self):
+
+        value = self.image.get_band_min(0)
+
+        self.assertAlmostEqual(value, 0.12474143)
     

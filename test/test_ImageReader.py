@@ -1,6 +1,5 @@
 
 import unittest
-import classifiers
 import os.path
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -11,33 +10,31 @@ from classifiers.imagereader import ImageReader
 class test_ImageReader(unittest.TestCase):
 
     #the image from which all oracle data was derived for these tests
-    image = "HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img"
+    imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
+
+    image = imr.get_raw_image()
+    image2 = imr.get_raw_original_image()
 
     '''
         Objective: compare the lengths of the arrays from bands.txt
         and the matched bands these should be the same length
     '''
     def test_match_bands(self):
-        
-        imr = ImageReader(self.image)
 
-        bands = imr.match_bands()
-        self.assertEqual(len(bands), len(imr.specific_bands))
+        bands = self.imr.match_bands()
+        
+        self.assertEqual(len(bands), len(self.imr.specific_bands))
 
     def test_get_bands_file(self):
 
-        imr = ImageReader(self.image)
-
-        self.assertEqual(len(imr.specific_bands), 350)
+        self.assertEqual(len(self.imr.specific_bands), 350)
 
     '''
         Objective: check that we successfully got the data ignore value from the file
     '''
     def test_get_data_ignore_value(self):
-       
-        imr = ImageReader(self.image)
 
-        self.assertEqual(imr.get_header_data_ignore_value(), 65535.0)
+        self.assertEqual(self.imr.get_header_data_ignore_value(), 65535.0)
 
     '''
         Objective: check that the image maintained the same features once it was exported
@@ -45,13 +42,9 @@ class test_ImageReader(unittest.TestCase):
     '''
     def test_get_raw_image(self):
 
-        imr = ImageReader(self.image)
-
-        image = imr.get_raw_image()
-
-        self.assertEqual(image.rows, 480)
-        self.assertEqual(image.columns, 320)
-        self.assertEqual(image.dimensions, 350)
+        self.assertEqual(self.image.rows, 480)
+        self.assertEqual(self.image.columns, 320)
+        self.assertEqual(self.image.dimensions, 350)
 
     '''
         Objective: check that the image maintained the same features once it was exported
@@ -59,14 +52,9 @@ class test_ImageReader(unittest.TestCase):
     '''
     def test_get_original_image(self):
 
-        imr = ImageReader(self.image)
-
-        image = imr.get_raw_original_image()
-
-        self.assertEqual(image.dimensions, 438)
-        self.assertEqual(image.rows, 480)
-        self.assertEqual(image.columns, 320)
-        
+        self.assertEqual(self.image2.rows, 480)
+        self.assertEqual(self.image2.columns, 320)
+        self.assertEqual(self.image2.dimensions, 438)  
 
     
 if __name__ == '__main__':

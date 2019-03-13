@@ -161,7 +161,13 @@ class ImageReader:
         image_file = envi.open(full_path + ".hdr", full_path)
 
         #load the image into memory
-        image = image_file.load()
+        original_image = image_file.load()
+
+        bands = []
+        for i in range(len(self.header_bands)):
+            bands.append(i)
+
+        image = original_image.read_bands(bands)
 
         #Put all data up to here into the CRISMImage wrapper class
         crism_image = CRISMImage(image, self.image_file, self.specific_bands, self.header_bands, self.ignore_value)
@@ -199,10 +205,6 @@ if __name__ == "__main__":
 
     imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
 
-    print(len(imr.get_bands_file()))
-
-    print(imr.get_header_data_ignore_value())
-
-    print(len(imr.get_header_wavelengths()))
-
     img = imr.get_raw_image()
+
+    print(len(img.bands))

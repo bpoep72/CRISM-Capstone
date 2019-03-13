@@ -10,5 +10,5 @@ Images/
 *.pyc
 */__pycache__/
 
-#ignore test file
+#ignore test file cache
 .pytest_cache/
