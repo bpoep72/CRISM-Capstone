@@ -9,9 +9,7 @@ data will be achieved through this wrapper.
 """
 
 import numpy as np
-import time
 import spectral as spectral
-
 import sys
 
 class CRISMImage:
@@ -92,12 +90,16 @@ class CRISMImage:
     '''
     def fix_bad_pixels(self):
 
+        #since the value we are replacing the data ignore value with is the band max
+        #   it makes sense for this loop to go in the order of band, row, col
         for i in range(self.dimensions):
             max_value = self.get_band_max(i)
 
+            #for each pixel in the band
             for j in range(self.rows):
                 for k in range(self.columns):
-                    if self.ignore_matrix[i, k] == 1 and self.raw_image[j, k, i] == self.ignore_value:
+                    #if the pixel was recognized as bad and is bad replace it with the band max
+                    if (self.ignore_matrix[j, k] == 1) and (self.raw_image[j, k, i] == self.ignore_value):
                         self.raw_image[j, k, i] = max_value
         
     '''
@@ -110,7 +112,7 @@ class CRISMImage:
     def get_band_by_number(self, band_number):
 
         if(band_number < 0) or (band_number > len(self.bands)):
-            raise Exception("Invalid band number given to get_band_by_number() of Class CRISMImage")
+            raise Exception("Invalid band number", band_number, " given to get_band_by_number() of Class CRISMImage")
         
         band_matrix = self.raw_image[:, :, band_number]
 
@@ -194,7 +196,7 @@ class CRISMImage:
     '''
         Take the index of a band in the original image and translate it to
         an index in the new self.bands array
-        
+
         Param: int - a band number from the original image
         Return: int - the band number from the new bands array, -1 if that band does
             not exist the in the new image
@@ -209,21 +211,47 @@ class CRISMImage:
         except ValueError:
             return -1
 
+    def normalize_band(self, band_number):
+
+        min_value = self.get_band_min(band_number)
+        max_value = self.get_band_max(band_number)
+
+        for i in range(self.rows):
+            for j in range(self.columns):
+                old_value = self.raw_image[i, j, band_number]
+                self.raw_image[i, j, band_number] = (old_value - min_value) / (max_value - min_value)
+
+    def get_three_channel(self, channel_1, channel_2, channel_3):
+
+        image = np.zeros((self.rows, self.columns, 3))
+
+        self.normalize_band(channel_1)
+        self.normalize_band(channel_2)
+        self.normalize_band(channel_3)
+
+        image[:, :, 0] = self.get_band_by_number(channel_1)
+        image[:, :, 1] = self.get_band_by_number(channel_2)
+        image[:, :, 2] = self.get_band_by_number(channel_3)
+
+        return image
+
 if __name__ == "__main__":
 
     import os.path
+    import time
     import sys
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     from classifiers.imagereader import ImageReader
+
+    from matplotlib import pyplot
     
     imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
-    
-    t = time.time()
 
     img = imr.get_raw_image()
 
-    elapsed = time.time() - t
+    print(img.get_band_by_number(0))
 
-    print(elapsed)
+    pyplot.imshow(img.get_three_channel(0, 1, 2))
+    pyplot.show()
 
 
