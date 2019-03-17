@@ -1,6 +1,6 @@
 # CRISMCapstonePython
 
-<h1>Dependancies</h1>
+<h2>Dependancies</h2>
 
 <h3>Packaged with Anaconda</h3>
 <ul>
