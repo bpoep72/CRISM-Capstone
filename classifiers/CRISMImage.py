@@ -8,7 +8,7 @@ data will be achieved through this wrapper.
 @author: Bryce
 """
 
-import numpy as np
+import numpy as numpy
 import spectral as spectral
 import sys
 
@@ -36,15 +36,24 @@ class CRISMImage:
     def __del__(self):
         del self.raw_image
 
+    '''
+        These are the preprocessing tasks, some of these can take a large amount of time
+        and thus they were added to this method so that toggling it could be made easier
+        should such a need arise later on.
+
+        Params: None
+        Returns: None
+    '''
     def preprocess(self):
 
         self.ignore_matrix = self.get_ignore_matrix()
         self.fix_bad_pixels()
+        self.norm_pixels()
     
     '''
-        The goal of this method is to get a boolean matrix. The pixel has a 1 of any its
-        dimensions contain an instance of the data ignore value. If it does not then
-        the pixel recieves a 0.
+        The goal of this method is to get a boolean matrix representing instances of the
+        data ignore value. The pixel has a 1 of any its dimensions contain an instance 
+        of the data ignore value. If it does not then the pixel recieves a 0.
         
         Params: none
         Return: int[rows][cols]:    0 means pixel does not contain the data ignore value,
@@ -52,16 +61,13 @@ class CRISMImage:
     '''
     def get_ignore_matrix(self):
         
-        #either a pixel is to be ignored or not ignored so we only need 2 dimensions
-        ignore_matrix = None
-
         #find all occurences of the data ignore value
         bad_data = self.raw_image == self.ignore_value
 
-        #sum then up along the z axis
-        bad_data = np.sum(bad_data, axis=2)
+        #sum up the number of occurences to get the (x, y) view
+        bad_data = numpy.sum(bad_data, axis=2)
 
-        #get the logical view in x and y, if the ignore value occured 1 or more times along z (x, y) = true else false
+        #get the logical view in (x, y), if the ignore value occured 1 or more times along z then (x, y) = true else false
         ignore_matrix = bad_data > 0
 
         return ignore_matrix
@@ -83,23 +89,38 @@ class CRISMImage:
         good_data = self.raw_image != self.ignore_value
 
         #to get the mean we need the number of good data points and their sum
-        num_good_data_pts = np.sum(good_data)
+        num_good_data_pts = numpy.sum(good_data)
 
         #multiply the logical view with the original data to get only the good data 
-        good_data = np.multiply(self.raw_image, good_data)
+        good_data = numpy.multiply(self.raw_image, good_data)
 
         #sum up all good data
-        sum_of_data = np.sum(good_data)
+        sum_of_data = numpy.sum(good_data)
 
         #find the mean
         mean_of_data = sum_of_data / num_good_data_pts
 
         #replace all occurences of the data ignore value with the mean of the data
         self.raw_image[self.raw_image == self.ignore_value] = mean_of_data
+
+    '''
+        Set the norm of each pixel to have magnitude = 1
+
+        Params: None
+        Returns: None
+
+    '''
+    def norm_pixels(self):
+
+        norm = numpy.linalg.norm(self.raw_image, axis=2)
+
+        print(norm[0, 0])
+
         
     '''
         The goal of this method is to get a single band based on its index from
-        the bands array
+        the bands array. 
+
         NOTE: This uses the new array not the old one so an operation like 
         imshow(image, [band, band, band]) from the matlab file will not use 
         the same bands as this. to translate pass each of those bands to self.get_new_ref()
@@ -128,7 +149,7 @@ class CRISMImage:
         band = band[band != self.ignore_value]
 
         #return the maximum
-        return np.max(band)
+        return numpy.max(band)
 
     '''
         Get the minimum value within the band
@@ -145,7 +166,7 @@ class CRISMImage:
         band = band[band != self.ignore_value]
 
         #return the minumum
-        return np.min(band)
+        return numpy.min(band)
         
     '''
         Get the array for a single pixel in the image
@@ -214,7 +235,7 @@ class CRISMImage:
         min_value = self.get_band_min(band_number)
         max_value = self.get_band_max(band_number)
 
-        norm_band = np.zeros((self.rows, self.columns))
+        norm_band = numpy.zeros((self.rows, self.columns))
 
         #if normalization was already done
         if min_value == 0 and max_value == 1:
@@ -236,7 +257,7 @@ class CRISMImage:
     '''
     def get_three_channel(self, channel_1, channel_2, channel_3):
 
-        image = np.zeros((self.rows, self.columns, 3))
+        image = numpy.zeros((self.rows, self.columns, 3))
 
         norm_channel_1 = self.normalize_band(channel_1)
         norm_channel_2 = self.normalize_band(channel_2)
@@ -262,5 +283,7 @@ if __name__ == "__main__":
 
     img = imr.get_raw_image()
 
-    pyplot.imshow(img.get_three_channel(233, 78, 13), cmap='jet')
+    pyplot.imshow(img.get_three_channel(233, 78, 13))
     pyplot.show()
+
+    print()
