@@ -30,7 +30,7 @@ class CRISMImage:
 
         #initilized only if preprocessing runs.
         self.ignore_matrix = None
-
+        self.normalized_image = None
         self.preprocess()
          
     def __del__(self):
@@ -48,7 +48,6 @@ class CRISMImage:
 
         self.ignore_matrix = self.get_ignore_matrix()
         self.fix_bad_pixels()
-        self.norm_pixels()
     
     '''
         The goal of this method is to get a boolean matrix representing instances of the
@@ -62,12 +61,12 @@ class CRISMImage:
     def get_ignore_matrix(self):
         
         #find all occurences of the data ignore value
-        bad_data = self.raw_image == self.ignore_value
+        bad_data = self.raw_image > 1000
 
         #sum up the number of occurences to get the (x, y) view
         bad_data = numpy.sum(bad_data, axis=2)
 
-        #get the logical view in (x, y), if the ignore value occured 1 or more times along z then (x, y) = true else false
+        #get the logical view in (x, y), if the ignored values occured 1 or more times along z then (x, y) = true else false
         ignore_matrix = bad_data > 0
 
         return ignore_matrix
@@ -76,9 +75,11 @@ class CRISMImage:
         The goal is to replace all the bad values with values that make the image
         more easily displayed. The pixels containing massive outliers, namely the
         data ignore value, are updated to use the mean of the whole data excluding 
-        the data ignore value. This makes displaying the images many times
-        easier as all we have to do is normalize the image into rgb and we no longer have
-        to consider these giant outliers.
+        the data ignore value, though there are a few other outliers.This makes 
+        displaying the images many times easier as all we have to do is normalize 
+        the image into rgb and we no longer have to consider these giant outliers.
+
+        NOTE: 1000 is a magic number that we were given to use for this
 
         Params: None
         Returns: None  
@@ -86,7 +87,7 @@ class CRISMImage:
     def fix_bad_pixels(self):
 
         #get the logical view of the data for whether or not the data ignore value is present
-        good_data = self.raw_image != self.ignore_value
+        good_data = self.raw_image < 1000
 
         #to get the mean we need the number of good data points and their sum
         num_good_data_pts = numpy.sum(good_data)
@@ -101,21 +102,7 @@ class CRISMImage:
         mean_of_data = sum_of_data / num_good_data_pts
 
         #replace all occurences of the data ignore value with the mean of the data
-        self.raw_image[self.raw_image == self.ignore_value] = mean_of_data
-
-    '''
-        Set the norm of each pixel to have magnitude = 1
-
-        Params: None
-        Returns: None
-
-    '''
-    def norm_pixels(self):
-
-        norm = numpy.linalg.norm(self.raw_image, axis=2)
-
-        print(norm[0, 0])
-
+        self.raw_image[self.raw_image > 1000] = mean_of_data
         
     '''
         The goal of this method is to get a single band based on its index from
@@ -285,5 +272,3 @@ if __name__ == "__main__":
 
     pyplot.imshow(img.get_three_channel(233, 78, 13))
     pyplot.show()
-
-    print()
