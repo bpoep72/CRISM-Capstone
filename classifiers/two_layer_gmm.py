@@ -47,7 +47,7 @@ class Two_Layer_Gmm:
             y = g1_pc[ self.data.v_s[i] - 1 ] + (d/2) * math.log( self.data.v_s[i] ) + pi_constant
             z = numpy.sum( numpy.log(numpy.diagonal(chsig)))
            
-            tpar = x - ( y ) - z #good
+            tpar = x - ( y ) - z
 
             temp = numpy.linalg.lstsq(chsig, v.T, rcond=None)[0].T
 
