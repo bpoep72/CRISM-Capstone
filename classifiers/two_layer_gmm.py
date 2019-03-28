@@ -49,6 +49,7 @@ class Two_Layer_Gmm:
            
             tpar = x - ( y ) - z
 
+            #solve Ax = B where chsig is A and v is B
             temp = numpy.linalg.lstsq(chsig, v.T, rcond=None)[0].T
 
             a = (self.data.v_s[i] + d)
