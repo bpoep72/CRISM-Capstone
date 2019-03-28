@@ -34,19 +34,20 @@ class Two_Layer_Gmm:
         d = len(data.mu_s[0])
 
         pi_constant = (d / 2) * math.log(math.pi)
-        g1_pc = scipy.special.gammaln( numpy.arange(.5, numpy.max(self.data.v_s[:]) + d, .5 ) )
+        #g1_pc is a range of values
+        g1_pc = scipy.special.gammaln( numpy.arange(.5, numpy.max(self.data.v_s[:]) + d + .5, .5 ) )
         n = len(self.normalized_image)
         loglik = numpy.zeros((n, ncl))
         
         for i in range(ncl):
             v = self.normalized_image - self.data.mu_s[i, :]
-            chsig = numpy.linalg.cholesky( self.data.Sig_s[:, :, i] ).T
+            chsig = numpy.linalg.cholesky( self.data.Sig_s[:, :, i] )
 
-            x = g1_pc[ self.data.v_s[i] + d ]
-            y = g1_pc[ self.data.v_s[i] ] + (d/2) * math.log( self.data.v_s[i] )
+            x = g1_pc[ self.data.v_s[i] + d - 1]
+            y = g1_pc[ self.data.v_s[i] - 1 ] + (d/2) * math.log( self.data.v_s[i] ) + pi_constant
             z = numpy.sum( numpy.log(numpy.diagonal(chsig)))
            
-            tpar = x - ( y + pi_constant ) - z
+            tpar = x - ( y ) - z #good
 
             temp = numpy.linalg.lstsq(chsig, v.T, rcond=None)[0].T
 
