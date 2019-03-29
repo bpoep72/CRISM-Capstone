@@ -43,9 +43,10 @@ class Two_Layer_Gmm:
             v = self.normalized_image - self.data.mu_s[i, :]
             chsig = numpy.linalg.cholesky( self.data.Sig_s[:, :, i] )
 
+            #-1 due to 0 vs 1 based indexing (0 based is superior, fight me)
             x = g1_pc[ self.data.v_s[i] + d - 1]
             y = g1_pc[ self.data.v_s[i] - 1 ] + (d/2) * math.log( self.data.v_s[i] ) + pi_constant
-            z = numpy.sum( numpy.log(numpy.diagonal(chsig)))
+            z = numpy.sum( numpy.log(numpy.diagonal(chsig)) )
            
             tpar = x - ( y ) - z
 
@@ -84,6 +85,9 @@ class Two_Layer_Gmm:
         #reshape the image such that each pixel is a row in the image variable
         image = numpy.reshape( self.image.raw_image, (self.image.rows * self.image.columns, self.image.dimensions) )
 
+        #1 based indexing fix
+        self.data.fin = self.data.fin - 1
+
         #remove the columns that we don't need according to fin
         reduced_image = image[:, self.data.fin]
 
@@ -106,6 +110,8 @@ if __name__ == "__main__":
     imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
 
     img = imr.get_raw_image()
+
+    image = numpy.reshape( img.raw_image, (img.rows * img.columns, img.dimensions) )
 
     data = npzFileReader.read_file(resource_file)
 
