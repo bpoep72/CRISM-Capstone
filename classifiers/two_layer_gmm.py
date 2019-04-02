@@ -115,6 +115,5 @@ if __name__ == "__main__":
 
     data = npzFileReader.read_file(resource_file)
 
-    #TODO: image is still in the original matrix form need to transform it so each row is a pixel and each column is a dimension
     Two_Layer_Gmm(img, data).test()
         
