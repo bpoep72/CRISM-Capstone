@@ -3,19 +3,21 @@ import math
 import numpy
 import scipy.special
 import scipy.linalg
-from npzFileReader import read_file
 
 import os.path
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+from npzFileReader import read_file
+
 class MineralClassfier:
 
     def __init__(self, image):
 
+        #image expects a CRISMImage
         self.image = image
-        self.mineral_model = self.get_model("neutral_pixel_classifier.npz")
-        self.neutral_pixel_model = self.get_model("mineral_classifier.npz")
+        self.mineral_model = self.get_model("mineral_classifier.npz")
+        self.neutral_pixel_model = self.get_model("neutral_pixel_classifier.npz")
         self.normalized_image = self.neutral_pixel_norm()
         self.neutral_image = self.neutral_pixel_classification()
 
@@ -47,7 +49,7 @@ class MineralClassfier:
 
         model = self.neutral_pixel_model
 
-        classifier_ouput = self.two_layer_gmm(self.normalized_image, model.sigma, model.mu, model.v_s, model.class_id)
+        classifier_ouput = self.two_layer_gmm(self.normalized_image, model.Sig_s, model.mu_s, model.v_s, model.class_id)
 
         #TODO: finish this method
         #NOTE: slogs are in classifier_ouput[2]
@@ -67,7 +69,7 @@ class MineralClassfier:
 
         model = self.mineral_model
 
-        classifier_ouput = self.two_layer_gmm(self.image.raw_image, model.sigma, model.mu, model.v_s, model.class_id)
+        classifier_ouput = self.two_layer_gmm(self.image.raw_image, model.Sig_s, model.mu_s, model.v_s, model.class_id)
 
         #TODO: finish this method
 
@@ -83,7 +85,7 @@ class MineralClassfier:
             v_s, ?
             class_ids, The class labels assigned to each row of the output
         Output:
-            NOTE: give as a 1x3 tuple
+            NOTE: return is given as a 3x1 tuple
             aa, the max across the rows
             bb, the index where the max occurs
             ypred, the label predictions
@@ -158,3 +160,14 @@ class MineralClassfier:
             normalized_image[i] = numpy.divide(reduced_image[i, :], row_norms[i])
 
         return normalized_image
+
+if __name__ == "__main__":
+
+    from imagereader import ImageReader
+    from crismimage import CRISMImage
+
+    imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
+
+    img = imr.get_raw_image()
+
+    classifier = MineralClassfier(img)
