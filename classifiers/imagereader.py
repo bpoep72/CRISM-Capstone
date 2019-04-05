@@ -13,12 +13,6 @@ import os
 import spectral.io.envi as envi
 import numpy as numpy
 
-import os.path
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
-from classifiers.crismimage import CRISMImage
-
 class ImageReader:
 
     #root folder of the project
@@ -203,6 +197,12 @@ class ImageReader:
         return crism_image
 
 if __name__ == "__main__":
+    
+    import os.path
+    import sys
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+    from classifiers.crismimage import CRISMImage
 
     imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
 
