@@ -257,14 +257,8 @@ class CRISMImage:
         return image
 
 if __name__ == "__main__":
-
-    import os.path
-    import time
-    import sys
     
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    
-    from classifiers.imagereader import ImageReader
+    from imagereader import ImageReader
     from matplotlib import pyplot
     
     imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
