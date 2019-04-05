@@ -17,6 +17,7 @@ class MineralClassfier:
         self.mineral_model = self.get_model("neutral_pixel_classifier.npz")
         self.neutral_pixel_model = self.get_model("mineral_classifier.npz")
         self.normalized_image = self.neutral_pixel_norm()
+        self.neutral_image = self.neutral_pixel_classification()
 
     '''
         Loads a model file set using the npzFileReader. These models are used in
@@ -35,20 +36,40 @@ class MineralClassfier:
 
         return model
 
-    
+    '''
+        Perform the neutral pixel classification and prepare the input image for use
+        in the mineral classifier.
 
+        Params: None
+        Returns: numpy.double[][][], the neutralized image
+    '''
     def neutral_pixel_classification(self):
 
         model = self.neutral_pixel_model
 
-        return self.two_layer_gmm(self.normalized_image, model.sigma, model.mu, model.v_s, model.class_id)
+        classifier_ouput = self.two_layer_gmm(self.normalized_image, model.sigma, model.mu, model.v_s, model.class_id)
 
+        #TODO: finish this method
+        #NOTE: slogs are in classifier_ouput[2]
 
+        neutral_image = None
+
+        return neutral_image
+
+    '''
+        Perform the mineral classification and return the output as the formatted classification map
+        so that if can be easily used within the gui.
+
+        Params: None
+        Return: ClassificationMap, the output of the classifier
+    '''
     def mineral_classification(self):
 
         model = self.mineral_model
 
-        return self.two_layer_gmm(self.image.raw_image, model.sigma, model.mu, model.v_s, model.class_id)
+        classifier_ouput = self.two_layer_gmm(self.image.raw_image, model.sigma, model.mu, model.v_s, model.class_id)
+
+        #TODO: finish this method
 
     '''
         Use a student T distribution to make a prediction about the input image 
