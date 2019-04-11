@@ -55,8 +55,10 @@ class ClassificationMap:
 
         max_color_val = rgb_max * 3
 
+        #integer spacing between each color
         spacing = int(max_color_val / len(self.labels))
 
+        #the combined color value of this number
         color_val = number * spacing
 
         # color picking "ai"
@@ -97,6 +99,7 @@ class ClassificationMap:
     def make_random_map(self, rows, columns, num_labels):
 
         combined_map = numpy.random.randint(0, num_labels, size=(rows, columns))
+        
         self.labels = numpy.arange(0, 25)
         self.layers = [None]*len(self.labels)
         self.predications = combined_map
