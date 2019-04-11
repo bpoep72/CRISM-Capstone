@@ -74,20 +74,33 @@ class MineralClassfier:
         neutral_image = numpy.zeros((self.image.columns * self.image.rows, self.image.dimensions))
         
         #we need x_ind and y_ind to distinguish where a pixel was in the original image
+        #all that x_ind and y_ind act as a map between the linear image and the original shape of the image
         indices = numpy.arange(0, self.image.columns)
         x_ind = numpy.tile(indices, self.image.rows)
 
-        y_ind = numpy.zeros((self.image.rows * self.image.columns))
-        
+        y_ind = numpy.zeros((self.image.rows * self.image.columns))  
         for i in range(self.image.rows):
 
             indices = numpy.ones((self.image.columns)) * i
             y_ind[self.image.columns * i:self.image.columns * (i + 1)] = indices
 
+        #the linearized ignore matrix
         ignore_matrix = numpy.reshape(self.image.ignore_matrix, (self.image.rows * self.image.columns))
 
-        #used for logical operations within the line after this
+        ''' There are a collection of logical clauses for the next section that
+            are calculated outside the loop body. This is to save time in execution
+            given that otherwise they would need to be recalculated each iteration.
+            Each clause independant of i is below.
+        '''
+        #clause for all the branches
         clause_1 = ignore_matrix != 1 #if pixel is not in the ignore matrix
+
+        #clause for if(y_ind[i] < window_size - 1):
+        clause_2 = y_ind < ( 2 * window_size - 1 ) #NOTE in this case window size is an index
+
+        #clauses for elif(y_ind[i] > self.image.rows - window_size - 1):
+        clause_3 = y_ind > self.image.rows - 1 - ( 2 * window_size )
+        clause_4 = y_ind < self.image.rows - 1
 
         for i in range(self.image.rows * self.image.columns):
 
@@ -95,34 +108,32 @@ class MineralClassfier:
             if(y_ind[i] < window_size - 1):
                 
                 clause_0 = x_ind == x_ind[i]
-                clause_2 = y_ind < ( 2 * window_size - 1 ) #if the pixel is within 2 * the window size
-                clause_3 = y_ind > 0 
 
+                #the product of the logical clauses is the input to the next if branch
                 indices = numpy.multiply(clause_0, clause_1)
                 indices = numpy.multiply(indices, clause_2)
-                indices = numpy.multiply(indices, clause_3)
 
             #lower edge of image
-            elif(y_ind[i] > self.image.rows - window_size - 1):
+            elif(y_ind[i] > self.image.rows - 1 - window_size):
                 
                 clause_0 = x_ind == x_ind[i]
-                clause_2 = y_ind > self.image.rows - 1 - ( 2 * window_size )
-                clause_3 = y_ind < self.image.rows - 1
 
                 indices = numpy.multiply(clause_0, clause_1)
-                indices = numpy.multiply(indices, clause_2)
                 indices = numpy.multiply(indices, clause_3)
+                indices = numpy.multiply(indices, clause_4)
             
             #middle pixels
             else:
 
                 clause_0 = x_ind == x_ind[i]
-                clause_2 = y_ind > y_ind[i] - window_size  #NOTE: you dun goofed here
-                clause_3 = y_ind < y_ind[i] + window_size  #NOTE: you dun goofed here indexing
+                clause_5 = y_ind > y_ind[i] - window_size
+                clause_6 = y_ind < y_ind[i] + window_size
 
                 indices = numpy.multiply(clause_0, clause_1)
-                indices = numpy.multiply(indices, clause_2)
-                indices = numpy.multiply(indices, clause_3)
+                indices = numpy.multiply(indices, clause_5)
+                indices = numpy.multiply(indices, clause_6)
+
+            print(numpy.sum(indices == True))
 
             indices = numpy.where(indices == True)
 
