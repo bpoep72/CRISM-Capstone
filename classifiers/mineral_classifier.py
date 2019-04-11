@@ -86,15 +86,17 @@ class MineralClassfier:
 
         ignore_matrix = numpy.reshape(self.image.ignore_matrix, (self.image.rows * self.image.columns))
 
-        for i in range(self.image.columns * self.image.rows):
+        #used for logical operations within the line after this
+        clause_1 = ignore_matrix != 1 #if pixel is not in the ignore matrix
+
+        for i in range(self.image.rows * self.image.columns):
 
             #upper edge of image
             if(y_ind[i] < window_size - 1):
-
+                
                 clause_0 = x_ind == x_ind[i]
-                clause_1 = ignore_matrix != 1 #if pixel is not in the ignore matrix
                 clause_2 = y_ind < ( 2 * window_size - 1 ) #if the pixel is within 2 * the window size
-                clause_3 = y_ind > 0
+                clause_3 = y_ind > 0 
 
                 indices = numpy.multiply(clause_0, clause_1)
                 indices = numpy.multiply(indices, clause_2)
@@ -104,8 +106,7 @@ class MineralClassfier:
             elif(y_ind[i] > self.image.rows - window_size - 1):
                 
                 clause_0 = x_ind == x_ind[i]
-                clause_1 = ignore_matrix != 1 #if pixel is not in the ignore matrix
-                clause_2 = y_ind > self.image.rows - ( 2 * window_size - 1 )
+                clause_2 = y_ind > self.image.rows - 1 - ( 2 * window_size )
                 clause_3 = y_ind < self.image.rows - 1
 
                 indices = numpy.multiply(clause_0, clause_1)
@@ -114,8 +115,8 @@ class MineralClassfier:
             
             #middle pixels
             else:
+
                 clause_0 = x_ind == x_ind[i]
-                clause_1 = ignore_matrix != 1 #if pixel is not in the ignore matrix
                 clause_2 = y_ind > y_ind[i] - window_size  #NOTE: you dun goofed here
                 clause_3 = y_ind < y_ind[i] + window_size  #NOTE: you dun goofed here indexing
 
@@ -123,8 +124,17 @@ class MineralClassfier:
                 indices = numpy.multiply(indices, clause_2)
                 indices = numpy.multiply(indices, clause_3)
 
-            
+            indices = numpy.where(indices == True)
 
+            #get where the pixels need to manipulated
+            if(len(indices) > 0):
+                IFi = numpy.zeroes( (len(indices), self.image.dimensions) )
+                for k in range(len(indices)):
+                    IFi[k] = 
+                ppi = classifier_ouput[2][ind]
+                ppiind = numpy.argpartition(ppi, -M, axis=0)[-M,:]
+                IF2[i,:] = numpy.divide(self.image.get_pixel_vector(x_ind[i], y_ind[i]), numpy.mean(IFi[ppiind], axis=0)
+                
         return neutral_image
 
     '''
