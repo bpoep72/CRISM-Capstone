@@ -76,16 +76,54 @@ class MineralClassfier:
         #we need x_ind and y_ind to distinguish where a pixel was in the original image
         indices = numpy.arange(0, self.image.columns)
         x_ind = numpy.tile(indices, self.image.rows)
-        indices = numpy.arange(0, self.image.rows)
-        y_ind = numpy.tile(indices, self.image.columns)
 
-        ignore_matrix = self.image.ignore_matrix
+        y_ind = numpy.zeros((self.image.rows * self.image.columns))
+        
+        for i in range(self.image.rows):
+
+            indices = numpy.ones((self.image.columns)) * i
+            y_ind[self.image.columns * i:self.image.columns * (i + 1)] = indices
+
+        ignore_matrix = numpy.reshape(self.image.ignore_matrix, (self.image.rows * self.image.columns))
 
         for i in range(self.image.columns * self.image.rows):
-            
-            if(y_ind(i) < window_size - 1):
 
-                pass
+            #upper edge of image
+            if(y_ind[i] < window_size - 1):
+
+                clause_0 = x_ind == x_ind[i]
+                clause_1 = ignore_matrix != 1 #if pixel is not in the ignore matrix
+                clause_2 = y_ind < ( 2 * window_size - 1 ) #if the pixel is within 2 * the window size
+                clause_3 = y_ind > 0
+
+                indices = numpy.multiply(clause_0, clause_1)
+                indices = numpy.multiply(indices, clause_2)
+                indices = numpy.multiply(indices, clause_3)
+
+            #lower edge of image
+            elif(y_ind[i] > self.image.rows - window_size - 1):
+                
+                clause_0 = x_ind == x_ind[i]
+                clause_1 = ignore_matrix != 1 #if pixel is not in the ignore matrix
+                clause_2 = y_ind > self.image.rows - ( 2 * window_size - 1 )
+                clause_3 = y_ind < self.image.rows - 1
+
+                indices = numpy.multiply(clause_0, clause_1)
+                indices = numpy.multiply(indices, clause_2)
+                indices = numpy.multiply(indices, clause_3)
+            
+            #middle pixels
+            else:
+                clause_0 = x_ind == x_ind[i]
+                clause_1 = ignore_matrix != 1 #if pixel is not in the ignore matrix
+                clause_2 = y_ind > y_ind[i] - window_size  #NOTE: you dun goofed here
+                clause_3 = y_ind < y_ind[i] + window_size  #NOTE: you dun goofed here indexing
+
+                indices = numpy.multiply(clause_0, clause_1)
+                indices = numpy.multiply(indices, clause_2)
+                indices = numpy.multiply(indices, clause_3)
+
+            
 
         return neutral_image
 
