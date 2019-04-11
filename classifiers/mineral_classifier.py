@@ -85,6 +85,9 @@ class MineralClassfier:
             indices = numpy.ones((self.image.columns)) * i
             y_ind[self.image.columns * i:self.image.columns * (i + 1)] = indices
 
+        #cast the y to int
+        y_ind = y_ind.astype(int)
+
         #the linearized ignore matrix
         ignore_matrix = numpy.reshape(self.image.ignore_matrix, (self.image.rows * self.image.columns))
 
@@ -134,16 +137,16 @@ class MineralClassfier:
                 indices = numpy.multiply(indices, clause_5)
                 indices = numpy.multiply(indices, clause_6)
 
-            indices = numpy.where(indices == True)
+            indices = numpy.where(indices == True)[0]
 
             #get where the pixels need to manipulated
             if(len(indices) > 0):
-                IFi = numpy.zeroes( (len(indices), self.image.dimensions) )
+                IFi = numpy.zeros( (len(indices), self.image.dimensions) )
                 for k in range(len(indices)):
-                    IFi[k] = self.image.get_pixel_vector(x_ind[indices[k]], y_ind[indices[k]])
+                    IFi[k, :] = self.image.get_pixel_vector(x_ind[indices[k]], y_ind[indices[k]])
                 ppi = slogs[indices]
                 ppiind = numpy.argpartition(ppi, -highest_slogs, axis=0)[-highest_slogs,:]
-                neutral_image[i,:] = numpy.divide(self.image.get_pixel_vector(x_ind[i], y_ind[i]), numpy.mean(IFi[ppiind], axis=0))
+                neutral_image[i,:] = numpy.divide(self.image.get_pixel_vector(x_ind[i], y_ind[i]), numpy.mean(IFi[ppiind], axis=0) )
         
         return neutral_image
 
