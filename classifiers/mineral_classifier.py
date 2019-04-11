@@ -79,6 +79,8 @@ class MineralClassfier:
         indices = numpy.arange(0, self.image.rows)
         y_ind = numpy.tile(indices, self.image.columns)
 
+        ignore_matrix = self.image.ignore_matrix
+
         for i in range(self.image.columns * self.image.rows):
             
             if(y_ind(i) < window_size - 1):
