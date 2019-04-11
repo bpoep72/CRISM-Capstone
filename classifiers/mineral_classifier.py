@@ -133,8 +133,6 @@ class MineralClassfier:
                 indices = numpy.multiply(indices, clause_5)
                 indices = numpy.multiply(indices, clause_6)
 
-            print(numpy.sum(indices == True))
-
             indices = numpy.where(indices == True)
 
             #get where the pixels need to manipulated
