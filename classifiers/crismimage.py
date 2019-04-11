@@ -67,7 +67,7 @@ class CRISMImage:
         bad_data = numpy.sum(bad_data, axis=2)
 
         #get the logical view in (x, y), if the ignored values occured 1 or more times along z then (x, y) = true else false
-        ignore_matrix = bad_data > 0
+        ignore_matrix = bad_data == self.dimensions
 
         return ignore_matrix
 
