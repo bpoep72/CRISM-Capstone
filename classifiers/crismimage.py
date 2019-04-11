@@ -156,7 +156,7 @@ class CRISMImage:
         return numpy.min(band)
         
     '''
-        Get the array for a single pixel in the image
+        Get the vector that is the band data for a single pixel
 
         Params:
             row: int, the row within the image the pixel comes from
