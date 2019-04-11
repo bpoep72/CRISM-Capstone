@@ -53,10 +53,11 @@ class MineralClassfier:
         Perform the neutral pixel classification and prepare the input image for use
         in the mineral classifier.
 
-        Params: int, the window size
-        Returns: numpy.double[][][], the neutralized image
+        Params: highest_slogs, the number of pixels with the highest slog scores to find
+            window_size, the window size    
+        Returns: numpy.double[][], the neutralized image
     '''
-    def neutral_pixel_classification(self, M, window_size):
+    def neutral_pixel_classification(self, highest_slogs, window_size):
 
         model = self.neutral_pixel_model
 
@@ -139,11 +140,11 @@ class MineralClassfier:
             if(len(indices) > 0):
                 IFi = numpy.zeroes( (len(indices), self.image.dimensions) )
                 for k in range(len(indices)):
-                    IFi[k] = 
-                ppi = classifier_ouput[2][ind]
-                ppiind = numpy.argpartition(ppi, -M, axis=0)[-M,:]
-                IF2[i,:] = numpy.divide(self.image.get_pixel_vector(x_ind[i], y_ind[i]), numpy.mean(IFi[ppiind], axis=0)
-                
+                    IFi[k] = self.image.get_pixel_vector(x_ind[indices[k]], y_ind[indices[k]])
+                ppi = slogs[indices]
+                ppiind = numpy.argpartition(ppi, -highest_slogs, axis=0)[-highest_slogs,:]
+                neutral_image[i,:] = numpy.divide(self.image.get_pixel_vector(x_ind[i], y_ind[i]), numpy.mean(IFi[ppiind], axis=0))
+        
         return neutral_image
 
     '''
