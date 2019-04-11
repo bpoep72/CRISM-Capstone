@@ -137,13 +137,11 @@ class MineralClassfier:
                 indices = numpy.multiply(indices, clause_5)
                 indices = numpy.multiply(indices, clause_6)
 
-            indices = numpy.where(indices == True)[0]
+            image_linearized = numpy.reshape( self.image.raw_image, (self.image.rows * self.image.columns, self.image.dimensions) )
 
             #get where the pixels need to manipulated
-            if(len(indices) > 0):
-                IFi = numpy.zeros( (len(indices), self.image.dimensions) )
-                for k in range(len(indices)):
-                    IFi[k, :] = self.image.get_pixel_vector(x_ind[indices[k]], y_ind[indices[k]])
+            if(numpy.sum(indices == True) > 0):
+                IFi = image_linearized[indices]
                 ppi = slogs[indices]
                 ppiind = numpy.argpartition(ppi, -highest_slogs, axis=0)[-highest_slogs,:]
                 neutral_image[i,:] = numpy.divide(self.image.get_pixel_vector(x_ind[i], y_ind[i]), numpy.mean(IFi[ppiind], axis=0) )
