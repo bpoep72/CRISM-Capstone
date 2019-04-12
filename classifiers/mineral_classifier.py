@@ -35,9 +35,8 @@ class MineralClassfier:
         self.neutral_image = self.ratioing(self.M_highest_slogs, self.ratioing_window_size)
         self.median_image = self.median_filtering(self.median_filter_window_size)
 
-        #the first one is commented out for now to save execution time
-        #self.mineral_classification_map = self.mineral_classification()
-        self.mineral_classification_map = None
+        #classifier output
+        self.mineral_classification_map = self.mineral_classification()
 
     '''
         Loads a model file set using the npzFileReader. These models are used in
@@ -356,7 +355,3 @@ if __name__ == "__main__":
     img = imr.get_raw_image()
 
     classifier = MineralClassfier(img)
-
-    classifier.ratioing(5, 25)
-
-    classifier.median_filtering(17)
