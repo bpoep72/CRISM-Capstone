@@ -173,7 +173,7 @@ class MineralClassfier:
     '''
     def median_filtering(self, window_size):
         #TODO: deal with edge cases that are calculated differently due to MATLAB using a truncate function
-        filtered_image = numpy.zeros([self.image.columns * self.image.rows, self.image.dimensions])
+        filtered_image = self.neutral_image
         IF1 = medfilt(self.neutral_image, kernel_size=[1, window_size])
         tmp = abs(IF1 - self.neutral_image)
         #MATLAB code used values from 1 to 248 here so I followed suit
@@ -197,12 +197,24 @@ class MineralClassfier:
 
         #use only the bands specified by self.mineral_model.fin
         reduced_image = image[:, model.fin]
+        #squeeze out the length 1 dimension the last operation caused
+        reduced_image = numpy.squeeze(reduced_image)
 
         #normalize the image
-        reduced_image = reduced_image - numpy.amin(reduced_image, axis=1) * numpy.ones( (1, len(model.fin)) )
-        diff = ( numpy.amax(reduced_image, axis=1) - numpy.amin(reduced_image, axis=1) ) * numpy.ones(1, len(model.fin))
-        reduced_image[ numpy.sum(diff, axis=1) != 0, :] = numpy.divide( reduced_image[numpy.sum(diff, axis=1) != 0, : ], diff[sum(diff, 1) != 0, :])
-        reduced_image[ numpy.sum(diff, axis=1) == 0, :] = numpy.zeros( numpy.sum(numpy.sum(diff, axis=1) == 0), len(model.fin) )
+        #get the mins along each row then reshape to allow matrix multiplication to take place
+        reduced_image_mins = numpy.amin(reduced_image, axis=1)
+        reduced_image_mins = numpy.reshape(reduced_image_mins, (reduced_image_mins.shape[0], 1))
+
+        reduced_image_maxs = numpy.amax(reduced_image, axis=1)
+        reduced_image_maxs = numpy.reshape(reduced_image_maxs, (reduced_image_maxs.shape[0], 1))
+
+        #make all the columns of reduced image the min of each row
+        reduced_image = reduced_image - numpy.matmul(reduced_image_mins, numpy.ones( (1, model.fin.shape[1]) ) )
+        #get the differences between each row
+        diff = ( reduced_image_maxs - reduced_image_mins ) * numpy.ones( (1, model.fin.shape[1]) )
+        #normalized based on the values of the reduced image's rows
+        reduced_image[ numpy.sum(diff, axis=1) != 0, :] = numpy.divide( reduced_image[numpy.sum(diff, axis=1) != 0, : ], diff[numpy.sum(diff, axis=1) != 0, :])
+        reduced_image[ numpy.sum(diff, axis=1) == 0, :] = numpy.zeros( ( numpy.sum(numpy.sum(diff, axis=1) == 0), model.fin.shape[1] ) )
 
         #call the classification method
         classifier_ouput = self.two_layer_gmm(reduced_image, model.Sig_s, model.mu_s, model.v_s, model.class_id)
