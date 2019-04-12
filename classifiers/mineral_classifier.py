@@ -177,7 +177,7 @@ class MineralClassfier:
         IF1 = medfilt(self.neutral_image, kernel_size=[1, window_size])
         tmp = abs(IF1 - self.neutral_image)
         #MATLAB code used values from 1 to 248 here so I followed suit
-        indices = tmp > numpy.mean(numpy.mean(tmp[:,0:247], axis=1)) + 1.5*numpy.mean(numpy.std(tmp[:,0:247], axis=1))
+        indices = tmp > numpy.mean(numpy.mean(tmp[:,0:248], axis=1)) + 1.5*numpy.mean(numpy.std(tmp[:,0:248], axis=1))
         filtered_image[indices] = IF1[indices]
         
         return filtered_image
