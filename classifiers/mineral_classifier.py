@@ -143,7 +143,7 @@ class MineralClassfier:
             if(numpy.sum(indices == True) > 0):
                 IFi = image_linearized[indices]
                 ppi = slogs[indices]
-                ppiind = numpy.argpartition(ppi, -highest_slogs, axis=0)[-highest_slogs,:]
+                ppiind = numpy.argpartition(ppi, -highest_slogs, axis=0)[-highest_slogs:]
                 neutral_image[i,:] = numpy.divide(self.image.get_pixel_vector(y_ind[i], x_ind[i]), numpy.mean(IFi[ppiind], axis=0) )
         
         return neutral_image
