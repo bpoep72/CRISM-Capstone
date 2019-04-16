@@ -26,6 +26,9 @@ class test_ImageReader(unittest.TestCase):
         
         self.assertEqual(len(bands), len(self.imr.specific_bands))
 
+    '''
+        Objective: ensure that the bands file exists and is the size we expect
+    '''
     def test_get_bands_file(self):
 
         self.assertEqual(len(self.imr.specific_bands), 350)
