@@ -13,7 +13,16 @@ import os
 import spectral.io.envi as envi
 import numpy as numpy
 
-from crismimage import CRISMImage
+if __package__ is '':
+
+    import sys
+    from os import path
+    sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+    
+    from crismimage import CRISMImage
+
+else:
+    from classifiers.crismimage import CRISMImage
 
 class ImageReader:
 
