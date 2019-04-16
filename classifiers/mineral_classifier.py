@@ -9,7 +9,7 @@ import os
 
 if __package__ is '':
 
-    #module is at the root of classifiers
+    #module is at the root of /classifiers/
     import sys
     from os import path
     sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
@@ -21,6 +21,7 @@ if __package__ is '':
     from crismimage import CRISMImage
 
 else:
+
     #module is at the root of the project
     from classifiers.crismimage import CRISMImage
     from classifiers.npzFileReader import read_file
