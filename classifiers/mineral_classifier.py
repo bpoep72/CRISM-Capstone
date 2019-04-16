@@ -4,15 +4,29 @@ import numpy
 import scipy.special
 import scipy.linalg
 from scipy.signal import medfilt
-
 import time
+import os
 
-import os.path
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+if __package__ is '':
 
-from npzFileReader import read_file
-from classificationmap import ClassificationMap
+    #module is at the root of classifiers
+    import sys
+    from os import path
+    sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+    
+    from crismimage import CRISMImage
+    from npzFileReader import read_file
+    from classificationmap import ClassificationMap
+    from imagereader import ImageReader
+    from crismimage import CRISMImage
+
+else:
+    #module is at the root of the project
+    from classifiers.crismimage import CRISMImage
+    from classifiers.npzFileReader import read_file
+    from classifiers.classificationmap import ClassificationMap
+    from classifiers.imagereader import ImageReader
+    from classifiers.crismimage import CRISMImage
 
 class MineralClassfier:
 
@@ -358,9 +372,6 @@ class MineralClassfier:
         self.mineral_classification()
 
 if __name__ == "__main__":
-
-    from imagereader import ImageReader
-    from crismimage import CRISMImage
 
     imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
 
