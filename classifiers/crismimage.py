@@ -222,16 +222,9 @@ class CRISMImage:
         min_value = self.get_band_min(band_number)
         max_value = self.get_band_max(band_number)
 
-        norm_band = numpy.zeros((self.rows, self.columns))
+        target_band = self.raw_image[:, :, band_number]
 
-        #if normalization was already done
-        if min_value == 0 and max_value == 1:
-            pass
-        else:
-            for i in range(self.rows):
-                for j in range(self.columns):
-                    old_value = self.raw_image[i, j, band_number]
-                    norm_band[i, j] = (old_value - min_value) / (max_value - min_value)
+        norm_band = (target_band - min_value) / (max_value - min_value)
 
         return norm_band
 
@@ -265,5 +258,10 @@ if __name__ == "__main__":
 
     img = imr.get_raw_image()
 
-    pyplot.imshow(img.get_three_channel(233, 78, 13))
+    image = img.get_three_channel(233, 78, 13)
+
+    pyplot.imshow(image)
+    pyplot.show()
+
+    pyplot.imshow(img.raw_image[:, :, (233, 78, 13)])
     pyplot.show()
