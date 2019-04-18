@@ -166,11 +166,11 @@ class GUI:
             self.red = int(self.redEntry.get())
             self.blue = int(self.blueEntry.get())
             self.green = int(self.greenEntry.get())
+
+            self.updateImage(self.display, self.red, self.blue, self.green)
         except:
             #TODO: Add input error message for user
             print("Input Invalid")
-        
-        self.updateImage(self.display, self.red, self.blue, self.green)
 
     def updateImage(self, display, r, g, b):
         print("change color")
@@ -198,15 +198,19 @@ class GUI:
     def openFile(self):
         print("open file")
         
-        self.image = tk.filedialog.askopenfilename(
+        image = tk.filedialog.askopenfilename(
+                initialdir = '/Images/',
                 defaultextension = '.img',
                 filetypes = [('Hyperspectral Image Files', '.img'), ('All Files', '.*')],
                 title = "Open Image File"
                 )
-        
-        self.header = self.image + ".hdr"
-        
-        self.updateColor()
+
+        if(len(image) != 0):
+            self.image = image
+            self.header = self.image + ".hdr"
+            self.updateColor()
+        else:
+            pass
         
     def saveFile(self):
         print("save file")
