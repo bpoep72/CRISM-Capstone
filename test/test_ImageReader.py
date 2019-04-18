@@ -1,8 +1,8 @@
 
 import unittest
-import os.path
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from os import path
+sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 
 from classifiers.crismimage import CRISMImage
 from classifiers.imagereader import ImageReader
@@ -10,6 +10,7 @@ from classifiers.imagereader import ImageReader
 class test_ImageReader(unittest.TestCase):
 
     #the image from which all oracle data was derived for these tests
+    #this image is expected to be in /Images/<the file>
     imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
 
     image = imr.get_raw_image()
@@ -25,6 +26,9 @@ class test_ImageReader(unittest.TestCase):
         
         self.assertEqual(len(bands), len(self.imr.specific_bands))
 
+    '''
+        Objective: ensure that the bands file exists and is the size we expect
+    '''
     def test_get_bands_file(self):
 
         self.assertEqual(len(self.imr.specific_bands), 350)

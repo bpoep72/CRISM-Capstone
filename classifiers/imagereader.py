@@ -11,12 +11,18 @@ frequently in this file, sorry.
 import os
 
 import spectral.io.envi as envi
+import numpy as numpy
 
-import os.path
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+if __package__ is '':
 
-from classifiers.crismimage import CRISMImage
+    import sys
+    from os import path
+    sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+    
+    from crismimage import CRISMImage
+
+else:
+    from classifiers.crismimage import CRISMImage
 
 class ImageReader:
 
@@ -194,7 +200,7 @@ class ImageReader:
         bands = self.match_bands()
 
         #get the image with only the bands we plan to use
-        image = original_image.read_bands(bands)
+        image = original_image.read_bands(bands).astype(numpy.float, casting='safe')
 
         #Put all data up to here into the CRISMImage wrapper class
         crism_image = CRISMImage(image, self.image_file, self.specific_bands, self.header_bands, self.ignore_value)

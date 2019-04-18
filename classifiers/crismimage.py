@@ -8,7 +8,7 @@ data will be achieved through this wrapper.
 @author: Bryce
 """
 
-import numpy as np
+import numpy as numpy
 import spectral as spectral
 import sys
 
@@ -30,23 +30,29 @@ class CRISMImage:
 
         #initilized only if preprocessing runs.
         self.ignore_matrix = None
-
+        self.normalized_image = None
         self.preprocess()
          
     def __del__(self):
         del self.raw_image
 
+    '''
+        These are the preprocessing tasks, some of these can take a large amount of time
+        and thus they were added to this method so that toggling it could be made easier
+        should such a need arise later on.
+
+        Params: None
+        Returns: None
+    '''
     def preprocess(self):
 
         self.ignore_matrix = self.get_ignore_matrix()
         self.fix_bad_pixels()
     
     '''
-        The goal of this method is to get a boolean matrix. The pixel has a 1 of any its
-        dimensions contain an instance of the data ignore value. If it does not then
-        the pixel recieves a 0.
-
-        NOTE: Runs over the whole matrix, this takes alot of time. (2-3mins).
+        The goal of this method is to get a boolean matrix representing instances of the
+        data ignore value. The pixel has a 1 of any its dimensions contain an instance 
+        of the data ignore value. If it does not then the pixel recieves a 0.
         
         Params: none
         Return: int[rows][cols]:    0 means pixel does not contain the data ignore value,
@@ -54,64 +60,61 @@ class CRISMImage:
     '''
     def get_ignore_matrix(self):
         
-        #either a pixel is to be ignored or not ignored so we only need 2 dimensions
-        ignore_matrix = np.zeros((self.rows, self.columns))
+        #find all occurences of the data ignore value
+        bad_data = self.raw_image > 1000
 
-        #get each pixel from the matrix
-        for i in range(self.rows):
-            for j in range(self.columns):
+        #sum up the number of occurences to get the (x, y) view
+        bad_data = numpy.sum(bad_data, axis=2)
 
-                pixel = self.get_pixel_vector(i, j)
-                
-                #check to see if the pixel contains the data ignore value if it does add
-                #  it to the ignore matrix and break (no need to check the rest)
-                for k in range(self.dimensions):
-                    if pixel[k] == self.ignore_value:
-                        ignore_matrix[i, j] = 1
-                        break
+        #get the logical view in (x, y), if the ignored values occured 1 or more times along z then (x, y) = true else false
+        ignore_matrix = bad_data == self.dimensions
 
         return ignore_matrix
 
     '''
         The goal is to replace all the bad values with values that make the image
         more easily displayed. The pixels containing massive outliers, namely the
-        data ignore value, are updated to use the next highest pixel value from that
-        band instead of the data ignore value. This makes displaying the images many times
-        easier as all we have to do is normalize the image into rgb and we no longer have
-        to consider these giant outliers.
+        data ignore value, are updated to use the mean of the whole data excluding 
+        the data ignore value, though there are a few other outliers.This makes 
+        displaying the images many times easier as all we have to do is normalize 
+        the image into rgb and we no longer have to consider these giant outliers.
+
+        NOTE: 1000 is a magic number that we were given to use for this
 
         Params: None
-        Returns: None
-        NOTE: 
-            Side Effect: 
-                The image will be altered from here forward to no longer contain the
-            data ignore value. If you want the original image back you must get it from an
-            ImageReader
+        Returns: None  
     '''
     def fix_bad_pixels(self):
 
-        #since the value we are replacing the data ignore value with is the band max
-        #   it makes sense for this loop to go in the order of band, row, col
-        for i in range(self.dimensions):
-            max_value = self.get_band_max(i)
+        #get the logical view of the data for whether or not the data ignore value is present
+        good_data = self.raw_image < 1000
 
-            #for each pixel in the band
-            for j in range(self.rows):
-                for k in range(self.columns):
-                    #if the pixel was recognized as bad and is bad replace it with the band max
-                    if (self.ignore_matrix[j, k] == 1) and (self.raw_image[j, k, i] == self.ignore_value):
-                        self.raw_image[j, k, i] = max_value
+        #to get the mean we need the number of good data points and their sum
+        num_good_data_pts = numpy.sum(good_data)
+
+        #multiply the logical view with the original data to get only the good data 
+        good_data = numpy.multiply(self.raw_image, good_data)
+
+        #sum up all good data
+        sum_of_data = numpy.sum(good_data)
+
+        #find the mean
+        mean_of_data = sum_of_data / num_good_data_pts
+
+        #replace all occurences of the data ignore value with the mean of the data
+        self.raw_image[self.raw_image > 1000] = mean_of_data
         
     '''
         The goal of this method is to get a single band based on its index from
-        the bands array
+        the bands array. 
+
         NOTE: This uses the new array not the old one so an operation like 
         imshow(image, [band, band, band]) from the matlab file will not use 
         the same bands as this. to translate pass each of those bands to self.get_new_ref()
     ''' 
     def get_band_by_number(self, band_number):
 
-        if(band_number < 0) or (band_number > len(self.bands)):
+        if(band_number < 0) or (band_number > len(self.bands) - 1):
             raise Exception("Invalid band number", band_number, " given to get_band_by_number() of Class CRISMImage")
         
         band_matrix = self.raw_image[:, :, band_number]
@@ -126,15 +129,14 @@ class CRISMImage:
     '''
     def get_band_max(self, band_number):
 
-        max_value = 0
-        band = self.get_band_by_number(band_number)
+        #isolate the band
+        band = self.raw_image[:, :, band_number]
+        
+        #remove the data ignore value if it exists
+        band = band[band != self.ignore_value]
 
-        for i in range(self.rows):
-            for j in range(self.columns):
-                if band[i, j] > max_value and band[i, j] != self.ignore_value:
-                    max_value = band[i, j]
-
-        return max_value
+        #return the maximum
+        return numpy.max(band)
 
     '''
         Get the minimum value within the band
@@ -144,19 +146,17 @@ class CRISMImage:
     '''
     def get_band_min(self, band_number):
 
-        #set the min to "infinity"
-        min_value = sys.float_info.max
-        band = self.get_band_by_number(band_number)
+        #isolate the band
+        band = self.raw_image[:, :, band_number]
+        
+        #remove the data ignore value if it exists
+        band = band[band != self.ignore_value]
 
-        for i in range(self.rows):
-            for j in range(self.columns):
-                if band[i, j] < min_value and band[i, j] != self.ignore_value:
-                    min_value = band[i, j]
-
-        return min_value
+        #return the minumum
+        return numpy.min(band)
         
     '''
-        Get the array for a single pixel in the image
+        Get the vector that is the band data for a single pixel
 
         Params:
             row: int, the row within the image the pixel comes from
@@ -211,47 +211,59 @@ class CRISMImage:
         except ValueError:
             return -1
 
+    '''
+        Normalize a band to be between 0-1 for use when displaying the image
+
+        Params: int, the band to be normalized
+        Returns: float (0-1), the normalized band
+    '''
     def normalize_band(self, band_number):
 
         min_value = self.get_band_min(band_number)
         max_value = self.get_band_max(band_number)
 
-        for i in range(self.rows):
-            for j in range(self.columns):
-                old_value = self.raw_image[i, j, band_number]
-                self.raw_image[i, j, band_number] = (old_value - min_value) / (max_value - min_value)
+        norm_band = numpy.zeros((self.rows, self.columns))
 
+        #if normalization was already done
+        if min_value == 0 and max_value == 1:
+            pass
+        else:
+            for i in range(self.rows):
+                for j in range(self.columns):
+                    old_value = self.raw_image[i, j, band_number]
+                    norm_band[i, j] = (old_value - min_value) / (max_value - min_value)
+
+        return norm_band
+
+    '''
+        Get just the 3 bands that we need. Channels 1-3 will be RGB values that can be displayed using
+        matlibplot's imshow function
+
+        Params: int, the channel numbers that you want to display
+        Returns: int[][][3], the 3 channel image as a matrix
+    '''
     def get_three_channel(self, channel_1, channel_2, channel_3):
 
-        image = np.zeros((self.rows, self.columns, 3))
+        image = numpy.zeros((self.rows, self.columns, 3))
 
-        self.normalize_band(channel_1)
-        self.normalize_band(channel_2)
-        self.normalize_band(channel_3)
+        norm_channel_1 = self.normalize_band(channel_1)
+        norm_channel_2 = self.normalize_band(channel_2)
+        norm_channel_3 = self.normalize_band(channel_3)
 
-        image[:, :, 0] = self.get_band_by_number(channel_1)
-        image[:, :, 1] = self.get_band_by_number(channel_2)
-        image[:, :, 2] = self.get_band_by_number(channel_3)
+        image[:, :, 0] = norm_channel_1
+        image[:, :, 1] = norm_channel_2
+        image[:, :, 2] = norm_channel_3
 
         return image
 
 if __name__ == "__main__":
-
-    import os.path
-    import time
-    import sys
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    from classifiers.imagereader import ImageReader
-
+    
+    from imagereader import ImageReader
     from matplotlib import pyplot
     
     imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
 
     img = imr.get_raw_image()
 
-    print(img.get_band_by_number(0))
-
-    pyplot.imshow(img.get_three_channel(0, 1, 2))
+    pyplot.imshow(img.get_three_channel(233, 78, 13))
     pyplot.show()
-
-
