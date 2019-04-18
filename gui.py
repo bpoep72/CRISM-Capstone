@@ -34,7 +34,6 @@ class GUI:
         self.classifier = None
         self.image_name = 'placeholder.gif'
         self.image = None
-        self.header = None
         self.median_filter_window_size = 17
         self.highest_slogs = 5
         self.ratioing_window_size = 25
@@ -177,9 +176,9 @@ class GUI:
         print("change color")
 
         #if an image has been loaded already
-        if(self.header != None):
+        if(self.image_path != None):
         
-            self.image_reader.update_image(self.image)
+            self.image_reader.update_image(self.image_path)
             self.image = self.image_reader.get_raw_image()
             path_to_image = self.image.get_three_channel(self.red, self.blue, self.green)
             
@@ -198,7 +197,7 @@ class GUI:
 
         parent_path = os.path.dirname(os.path.abspath(__file__))
         
-        image = tk.filedialog.askopenfilename(
+        image_path = tk.filedialog.askopenfilename(
                 initialdir = os.path.join(parent_path, 'Images'),
                 defaultextension = '.img',
                 filetypes = [('Hyperspectral Image Files', '.img'), ('All Files', '.*')],
@@ -206,15 +205,11 @@ class GUI:
                 )
 
         #the instruction above returns os dependant paths make them independent of os again
-        image = os.path.abspath(image)
-        
-        #get just the image name
-        self.image_name = os.path.split(image)[1]
+        image_path = os.path.abspath(image_path)
 
         #incase no image is selected
-        if(len(image) != 0):
-            self.image = image
-            self.header = self.image + ".hdr"
+        if(len(image_path) != 0):
+            self.image_path = image_path
             self.updateColor()
         else:
             pass
@@ -248,7 +243,7 @@ class GUI:
         print("Parameters Updated")
 
         #if an image has been loaded already
-        if(self.header != None):
+        if(self.image != None):
             try:
                 #we only want to recalculate anything on the backend if anything changes that would impact the output
                 if(self.median_filter_window_size != int(self.medianEntry.get())):

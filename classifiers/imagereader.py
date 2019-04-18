@@ -41,15 +41,14 @@ class ImageReader:
     '''
     def __init__(self, imageFile):
         self.image_file = imageFile
+        self.specific_bands = self.get_bands_file()
 
         if(len(self.image_file) > 0):
-            self.header_bands = self.get_header_wavelengths()
-            self.specific_bands = self.get_bands_file()
-            self.ignore_value = self.get_header_data_ignore_value()
-            self.default_bands = self.get_default_bands()
+            self.header_bands = self.get_header_wavelengths() #the wavelengths from the header file
+            self.ignore_value = self.get_header_data_ignore_value() #the data ignore value
+            self.default_bands = self.get_default_bands() #the image's default bands
         else:
             self.header_bands = None
-            self.specific_bands = self.get_bands_file()
             self.ignore_value = None
             self.default_bands = None
 
