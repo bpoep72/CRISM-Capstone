@@ -35,6 +35,10 @@ class ImageReader:
     #head to the images directory
     image_dir = os.path.join(parent_directory, 'Images')
 
+    '''
+        Param:
+            str, imageFile: the image file without its extensions or the path
+    '''
     def __init__(self, imageFile):
         self.image_file = imageFile
 
@@ -119,7 +123,6 @@ class ImageReader:
     Throws: FileNotFoundError if file does not exist
     '''
     def get_header_wavelengths(self):
-        header = self.image_file + ".hdr"
 
         #the string path of the image
         full_path = os.path.join(self.image_dir, self.image_file)
@@ -144,7 +147,6 @@ class ImageReader:
     Throws: FileNotFoundError if file does not exist
     '''
     def get_header_data_ignore_value(self):
-        header = self.image_file + ".hdr"
 
         #the string path of the image
         full_path = os.path.join(self.image_dir, self.image_file)
