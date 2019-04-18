@@ -63,7 +63,6 @@
 <h2>Possible features for the future</h2>
   <ul>
     <li>progress bar</li>
-    <li>spectrograms</li>
     <li>per pixel value information as a hover over on the image</li>
     <li>per band information panel</li>
     <li>optimized ratioing</li>
