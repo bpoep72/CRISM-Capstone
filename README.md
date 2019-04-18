@@ -7,6 +7,8 @@
   <li>NumPy</li>
   <li>matlib</li>
   <li>matplot</li>
+  <li>Tkinter</li>
+  <li>Pillow (PIL)</li>
 </ul>
 <h3>NOT Packaged with Anaconda</h3>
 <ul>
@@ -59,7 +61,17 @@
       </div>
     </li>
   </ul>
-
+  
+<h2>Possible features for the future</h2>
+  <ul>
+    <li>progress bar</li>
+    <li>per pixel value information as a hover over on the image</li>
+    <li>per band information panel</li>
+    <li>optimized ratioing</li>
+    <li>save and load classification option</li>
+    <li>ability to have multiple images open at once</li>
+    <li>ability to see the model files in application</li>
+  </ul>
 <h2>How to Use The Application</h2>
 
 
