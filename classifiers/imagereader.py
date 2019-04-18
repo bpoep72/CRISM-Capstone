@@ -49,7 +49,7 @@ class ImageReader:
             self.default_bands = self.get_default_bands()
         else:
             self.header_bands = None
-            self.specific_bands = None
+            self.specific_bands = self.get_bands_file()
             self.ignore_value = None
             self.default_bands = None
 
@@ -74,20 +74,26 @@ class ImageReader:
         return default_bands
 
     '''
-        Update the image and recalculate all the required values.
+        Update the image this instance of ImageReader points to and 
+        recalculate all the required values.
 
         Params:
-            str, new_dir: the full parent path
-            str, image_file: the name of the image file
+            str, path: the new full path of the new image
     '''
-    def update_image(self, new_dir, image_file):
+    def update_image(self, path):
 
-        self.image_file = image_file
-        self.image_dir = new_dir
-        self.header_bands = self.get_header_wavelengths()
-        self.specific_bands = self.get_bands_file()
-        self.ignore_value = self.get_header_data_ignore_value()
+        #split the file name from its parent directory
+        self.image_file = os.path.split(path)[1]
+
+        #save the new parent directory
+        self.image_dir = os.path.split(path)[0]
+        
+        #check that the default bands are the same
         self.default_bands = self.get_default_bands()
+
+        self.header_bands = self.get_header_wavelengths()
+        self.ignore_value = self.get_header_data_ignore_value()
+        
 
     '''
     Match the bands that came from the bands.txt file to the bands from the

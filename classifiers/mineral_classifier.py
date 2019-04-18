@@ -374,8 +374,18 @@ class MineralClassfier:
 
 if __name__ == "__main__":
 
+    import matplotlib.pyplot
+
     imr = ImageReader("HRL000040FF_07_IF183L_TRR3_BATCH_CAT_corr.img")
 
     img = imr.get_raw_image()
 
     classifier = MineralClassfier(img)
+
+    r_image = classifier.neutral_image
+    r_image = numpy.reshape(r_image, (classifier.image.rows, classifier.image.columns, classifier.image.dimensions))
+    r_image = r_image[:, :, (233, 78, 13)]
+    matplotlib.pyplot.imshow(r_image, normed=True)
+    matplotlib.pyplot.show()
+
+    print()

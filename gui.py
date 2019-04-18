@@ -30,8 +30,9 @@ class GUI:
         self.green = GREEN_BASE
 
         #placeholders for the backend variables
-        self.image_reader = None
+        self.image_reader = ImageReader("")
         self.classifier = None
+        self.image_name = 'placeholder.gif'
         self.image = None
         self.header = None
         self.median_filter_window_size = 17
@@ -170,24 +171,21 @@ class GUI:
             self.updateImage(self.display, self.red, self.blue, self.green)
         except:
             #TODO: Add input error message for user
-            print("Input Invalid")
+            print("Input Invalid: update Color")
 
     def updateImage(self, display, r, g, b):
         print("change color")
 
         #if an image has been loaded already
         if(self.header != None):
-
-            #TODO: Replace this block with the image output from the CRISMImage
         
-            # reads in the hyperspectral image and creates a view of it
-            self.hsi = envi.open(self.header, self.image)
-
-            save_rgb("display.gif", self.hsi, [r, g, b], stretch=(0, 0.9), format='gif')
+            self.image_reader.update_image(self.image)
+            self.image = self.image_reader.get_raw_image()
+            path_to_image = self.image.get_three_channel(self.red, self.blue, self.green)
             
-            self.photo = tk.PhotoImage(file="display.gif")
+            self.photo = tk.PhotoImage(file=path_to_image)
             self.display.image = self.photo
-            #self.display = tk.Label(self.root, image=self.photoSave)
+
             self.display.configure(image=self.display.image)
 
         #the only image loaded so far is the place holder image
@@ -197,14 +195,23 @@ class GUI:
         
     def openFile(self):
         print("open file")
+
+        parent_path = os.path.dirname(os.path.abspath(__file__))
         
         image = tk.filedialog.askopenfilename(
-                initialdir = '/Images/',
+                initialdir = os.path.join(parent_path, 'Images'),
                 defaultextension = '.img',
                 filetypes = [('Hyperspectral Image Files', '.img'), ('All Files', '.*')],
                 title = "Open Image File"
                 )
 
+        #the instruction above returns os dependant paths make them independent of os again
+        image = os.path.abspath(image)
+        
+        #get just the image name
+        self.image_name = os.path.split(image)[1]
+
+        #incase no image is selected
         if(len(image) != 0):
             self.image = image
             self.header = self.image + ".hdr"
