@@ -39,9 +39,41 @@ class ImageReader:
         self.header_bands = self.get_header_wavelengths()
         self.specific_bands = self.get_bands_file()
         self.ignore_value = self.get_header_data_ignore_value()
+        self.default_bands = self.get_default_bands()
 
-    def __del__(self):
-        pass
+
+    '''
+        Get the default bands from the header files.
+    '''
+    def get_default_bands(self):
+
+        #the string path of the image
+        full_path = os.path.join(self.image_dir, self.image_file)
+
+        #open the image reading in its header then the .img file
+        image_file = envi.open(full_path + ".hdr", full_path)
+
+        default_bands = image_file.metadata['default bands']
+
+        #cast all the bands to ints
+        for i in range(len(default_bands)):
+
+            default_bands[i] = int(default_bands[i])
+
+        return default_bands
+
+    '''
+        Update the image and recalculate all the required values.
+    '''
+    def update_image(self, new_dir, image_file):
+
+        self.image_file = image_file
+        self.image_dir = new_dir
+        self.header_bands = self.get_header_wavelengths()
+        self.specific_bands = self.get_bands_file()
+        self.ignore_value = self.get_header_data_ignore_value()
+        self.default_bands = self.get_default_bands()
+
 
     '''
     Match the bands that came from the bands.txt file to the bands from the
