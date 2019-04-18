@@ -13,3 +13,6 @@ Images/*.hdr
 
 #ignore test file cache
 .pytest_cache/
+
+#ignore the gui image
+display.gif
