@@ -15,6 +15,8 @@ from spectral import *
 import spectral.io.envi as envi
 from PIL import Image, ImageTk
 
+from classifiers.imagereader import ImageReader
+
 # default channels for hyperspectral image (usually 233, 78, 13)
 RED_BASE = 233
 BLUE_BASE = 78
@@ -26,6 +28,15 @@ class GUI:
         self.red = RED_BASE
         self.blue = BLUE_BASE
         self.green = GREEN_BASE
+
+        #placeholders for the backend variables
+        self.image_reader = None
+        self.classifier = None
+        self.image = None
+        self.header = None
+        self.median_filter_window_size = 17
+        self.highest_slogs = 5
+        self.ratioing_window_size = 25
         
         # initialize root of GUI
         self.root = root
@@ -61,13 +72,15 @@ class GUI:
         abspath = os.path.dirname(os.path.realpath(__file__))
         #go down a directory to point at the images directory
         abspath = os.path.join(abspath, 'Images')
-        root_node = self.tree.insert('', 'end', text=abspath, open=True)
+        tree_root_name = 'Images'
+        root_node = self.tree.insert('', 'end', text=tree_root_name, open=True)
         self.process_directory(root_node, abspath)
         
         self.paneSystem.add(self.treeFrame, sticky="n,s,e,w", stretch="always")
         
         # open default image in image display
-        self.photo = tk.PhotoImage(file="displayStart.gif")
+        placeholder_image_dir = os.path.join(abspath, 'placeholder.gif')
+        self.photo = tk.PhotoImage(file=placeholder_image_dir)
         self.display = tk.Label(root, image=self.photo)
         self.display.image = self.photo
         #self.display.grid(row=0, column=1, sticky="n,s,e,w")
@@ -95,15 +108,15 @@ class GUI:
         self.greenLabel.grid(row=2,column=0)
         
         self.redEntry = tk.Entry(self.channelTab)
-        self.redEntry.insert(0, RED_BASE)
+        self.redEntry.insert(0, self.red)
         self.redEntry.grid(row=0,column=1)
         
         self.blueEntry = tk.Entry(self.channelTab)
-        self.blueEntry.insert(0, BLUE_BASE)
+        self.blueEntry.insert(0, self.blue)
         self.blueEntry.grid(row=1,column=1)
         
         self.greenEntry = tk.Entry(self.channelTab)
-        self.greenEntry.insert(0, GREEN_BASE)
+        self.greenEntry.insert(0, self.green)
         self.greenEntry.grid(row=2,column=1)
         
         self.colorUpdate = tk.Button(self.channelTab, text="Apply Channels", command=self.updateColor)
@@ -126,11 +139,11 @@ class GUI:
         self.medianEntry = tk.Entry(self.paramTab)
         self.medianEntry.grid(row=0, column=1)
         
-        self.ratioLabel = tk.Entry(self.paramTab)
-        self.ratioLabel.grid(row=1, column=1)
+        self.ratioEntry = tk.Entry(self.paramTab)
+        self.ratioEntry.grid(row=1, column=1)
         
-        self.slogsLabel = tk.Entry(self.paramTab)
-        self.slogsLabel.grid(row=2, column=1)
+        self.slogsEntry = tk.Entry(self.paramTab)
+        self.slogsEntry.grid(row=2, column=1)
         
         self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
         self.paramUpdate.grid(row=3, column=1)
@@ -149,26 +162,38 @@ class GUI:
 
     def updateColor(self):
         print("updateColor")
-        
-        self.red = int(self.redEntry.get())
-        self.blue = int(self.blueEntry.get())
-        self.green = int(self.greenEntry.get())
+        try:
+            self.red = int(self.redEntry.get())
+            self.blue = int(self.blueEntry.get())
+            self.green = int(self.greenEntry.get())
+        except:
+            #TODO: Add input error message for user
+            print("Input Invalid")
         
         self.updateImage(self.display, self.red, self.blue, self.green)
 
     def updateImage(self, display, r, g, b):
         print("change color")
+
+        #if an image has been loaded already
+        if(self.header != None):
+
+            #TODO: Replace this block with the image output from the CRISMImage
         
-        # reads in the hyperspectral image and creates a view of it
-        self.hsi = envi.open(self.header, self.image)
-        self.view = imshow(self.hsi, [r, g, b], stretch=(0, 0.9))
-        print(self.view)
-        save_rgb("display.gif", self.hsi, [r, g, b], stretch=(0, 0.9), format='gif')
-        
-        self.photo = tk.PhotoImage(file="display.gif")
-        self.display.image = self.photo
-        #self.display = tk.Label(self.root, image=self.photoSave)
-        self.display.configure(image=self.display.image)
+            # reads in the hyperspectral image and creates a view of it
+            self.hsi = envi.open(self.header, self.image)
+
+            save_rgb("display.gif", self.hsi, [r, g, b], stretch=(0, 0.9), format='gif')
+            
+            self.photo = tk.PhotoImage(file="display.gif")
+            self.display.image = self.photo
+            #self.display = tk.Label(self.root, image=self.photoSave)
+            self.display.configure(image=self.display.image)
+
+        #the only image loaded so far is the place holder image
+        #TODO: maybe add a notification to load an image otherwise nothing happens here
+        else:
+            pass
         
     def openFile(self):
         print("open file")
@@ -210,6 +235,30 @@ class GUI:
     def updateParam(self):
         # TODO: implementation
         print("Parameters Updated")
+
+        #if an image has been loaded already
+        if(self.header != None):
+            try:
+                #we only want to recalculate anything on the backend if anything changes that would impact the output
+                if(self.median_filter_window_size != int(self.medianEntry.get())):
+                    #if either of these values change we have to recalculate everything
+                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):  
+                        self.ratioing_window_size = int(self.ratioEntry.get())
+                        self.highest_slogs = int(self.slogsEntry.get())
+                    
+                        self.classifier.update_ratioing_parameters(self.highest_slogs, self.ratioing_window_size)
+                    else:
+                        self.median_filter_window_size = int(self.medianEntry.get())
+
+                        self.classifier.update_median_filtering_parameters(self.median_filter_window_size)
+            # if the input was not a valid int
+            except:
+                #TODO: Add input error message for user
+                print("Input Invalid")
+
+        #if an image has not already been loaded
+        else:
+            pass
         
     def documentation(self):
         # TODO: implementation
@@ -218,6 +267,10 @@ class GUI:
     def about(self):
         # TODO: implementation
         print("About")
+
+    def get_default_bands(self):
+        pass
+        
 
 def main():
     root = tk.Tk()
