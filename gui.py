@@ -11,9 +11,10 @@ Include installation instructions
 import os
 import tkinter as tk
 from tkinter import filedialog, ttk
-from spectral import *
 import spectral.io.envi as envi
 from PIL import Image, ImageTk
+
+import matplotlib
 
 from classifiers.imagereader import ImageReader
 
@@ -217,26 +218,17 @@ class GUI:
     def saveFile(self):
         print("save file")
         
-        self.fileName = tk.filedialog.asksaveasfilename(
-                defaultextension = '.jpg',
-                filetypes = [('JPEG file', '.jpg'),
+        fileName = tk.filedialog.asksaveasfilename(
+                defaultextension = '.png',
+                filetypes = [('PNG file', '.png'),
+                             ('JPEG file', '.jpg'),
                              ('GIF file', '.gif'),
-                             ('PNG file', '.png'),
                              ('All Files', '.*')],
                 title = "Save Image File As"
                 )
-        
-        # obtains the short file name minus the path and the file extension
-        indexName = self.fileName.rfind('/')
-        self.fileName = self.fileName[indexName+1:]
-        indexExt = self.fileName.rfind('.')
-        self.fileExtension = self.fileName[indexExt+1:]
-        
-        # format only accepts "jpeg", not "jpg"
-        if(self.fileExtension == "jpg"):
-            self.fileExtension = "jpeg"
-        
-        save_rgb(self.fileName, self.hsi, [self.red, self.blue, self.green], stretch=(0, 0.9), format=self.fileExtension)
+
+        img = matplotlib.image.imread('display.png')
+        matplotlib.image.imsave(fileName, img)
 
     def updateParam(self):
         # TODO: implementation
