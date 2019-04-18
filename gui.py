@@ -59,6 +59,8 @@ class GUI:
 
         #point the parent directory this file was called from
         abspath = os.path.dirname(os.path.realpath(__file__))
+        #go down a directory to point at the images directory
+        abspath = os.path.join(abspath, 'Images')
         root_node = self.tree.insert('', 'end', text=abspath, open=True)
         self.process_directory(root_node, abspath)
         

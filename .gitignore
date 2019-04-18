@@ -1,6 +1,7 @@
 
 #Ignore the images since they are too large
-Images/
+Images/*.img
+Images/*.hdr
 
 #ignore IDE files
 .spyproject/
