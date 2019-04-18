@@ -41,7 +41,6 @@ class ImageReader:
         self.ignore_value = self.get_header_data_ignore_value()
         self.default_bands = self.get_default_bands()
 
-
     '''
         Get the default bands from the header files.
     '''
@@ -111,31 +110,19 @@ class ImageReader:
     def get_header_wavelengths(self):
         header = self.image_file + ".hdr"
 
-        #get the wavelenghts from the header file
-        with open(os.path.join(self.image_dir, header)) as header_file:
-            file = header_file.read()
+        #the string path of the image
+        full_path = os.path.join(self.image_dir, self.image_file)
 
-            #get the index where the waves start at
-            word = "wavelength = {"
-            start_index = file.find(word) + len(word) + 1
+        #open the image reading in its header then the .img file
+        image_file = envi.open(full_path + ".hdr", full_path)
 
-            #get the place where the waves end
-            word = "}"
-            end_index = file.find(word, start_index)
+        header_bands = image_file.metadata['wavelength']
 
-            #get the bands from the header file
-            header_bands = file[start_index:end_index]
+        for i in range(len(header_bands)):
 
-            #get rid of end the end line character
-            header_bands = header_bands.replace("\n", "")
-            #split the csv file
-            header_bands = header_bands.split(", ")
+            header_bands[i] = float(header_bands[i])
 
-            #convert to float
-            for i in range(len(header_bands)):
-                header_bands[i] = float(header_bands[i])
-
-            return header_bands
+        return header_bands
 
     '''
     The header has a field where it tells of a value the instrument assigns
@@ -148,21 +135,15 @@ class ImageReader:
     def get_header_data_ignore_value(self):
         header = self.image_file + ".hdr"
 
-        #get the data ignore value from the header file
-        with open(os.path.join(self.image_dir, header)) as header_file:
-            file = header_file.read()
+        #the string path of the image
+        full_path = os.path.join(self.image_dir, self.image_file)
 
-            #get the index where the data ignore value is at
-            word = "data ignore value = "
-            start_index = file.find(word) + len(word)
+        #open the image reading in its header then the .img file
+        image_file = envi.open(full_path + ".hdr", full_path)
 
-            #the end of line character
-            word = "\n"
-            end_index = file.find(word, start_index)
+        ignore_value = float(image_file.metadata['data ignore value'])
 
-            ignore_value = file[start_index:end_index]
-
-            return float(ignore_value)
+        return ignore_value
 
     '''
     Get the specific bands that we work with for this project so that the
