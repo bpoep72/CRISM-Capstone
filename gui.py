@@ -56,8 +56,9 @@ class GUI:
         self.tree = ttk.Treeview(self.treeFrame)
         self.tree.pack(expand=True, fill=tk.BOTH)
         self.tree.bind("<Double-1>", self.onDoubleClick)
-        
-        abspath = os.path.abspath("C:")
+
+        #point the parent directory this file was called from
+        abspath = os.path.dirname(os.path.realpath(__file__))
         root_node = self.tree.insert('', 'end', text=abspath, open=True)
         self.process_directory(root_node, abspath)
         
