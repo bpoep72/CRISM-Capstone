@@ -98,6 +98,14 @@
       <li>Change the name of the image if desired</li>
       <li>Press Save</li>
     </ul>
+    <li><h3 style="text-decoration:underline">Changing Bands</h3></li>
+    <ul>
+      <li>Locate the Channel Display tab on the right of the application</li>
+      <li>If it is not open click it</li>
+      <li>In the three fields the channel that will represent the red, green and blue channels can be replaced by your desired bands</li>
+      <li>Once you are happy with the selected bands click update. There may be a slight pause then the image should be updated to display the updated image using the input bands.</li>
+    </ul>
+    
 
   </ul>
 
