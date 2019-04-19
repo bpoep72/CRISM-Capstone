@@ -14,6 +14,7 @@ from tkinter import filedialog, ttk
 import spectral.io.envi as envi
 from PIL import Image, ImageTk
 
+import webbrowser
 import matplotlib
 
 from classifiers.imagereader import ImageReader
@@ -263,8 +264,9 @@ class GUI:
             pass
         
     def documentation(self):
-        # TODO: implementation
-        print("Documentation")
+
+        #open the git page in a new browser tab if possible
+        webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython', new=2)
         
     def about(self):
         # TODO: implementation
