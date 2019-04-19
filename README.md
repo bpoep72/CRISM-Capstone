@@ -74,7 +74,7 @@
   </ul>
 <h2>How to Use The Application</h2>
   <ul>
-    <li><h3 style=text-decoration:underline>Opening Images</h3></li>
+    <li><h3 style="text-decoration:underline">Opening Images</h3></li>
     <ul>
       <h4>Option 1: File Dialog</h4>
       <li>Hover over the File option in the top bound options menubar</li>
