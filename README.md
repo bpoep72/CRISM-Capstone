@@ -76,8 +76,8 @@
   <ul>
     <li><h3 text-decoration: underline>Opening Images</h3></li>
     <ul>
-      <h5>Option 1: File Dialog</h5>
-      <li>Hover over the File option in the top bound header</li>
+      <h4>Option 1: File Dialog</h4>
+      <li>Hover over the File option in the top bound options menubar</li>
       <li>In the drop down select Open File</li>
       <li>Select an image that is inside the default image folder Images or anywhere on your machine (To pick an image it must have the
       .img extension and the .hdr file MUST be the same directory)</li>
@@ -85,7 +85,7 @@
       <li>The image should load and should be displayed using its default bands</li>
     </ul>
     <ul>
-      <h5>Option 2: File Tree</h5>
+      <h4>Option 2: File Tree</h4>
       <li>The file tree is set to show all .img files in this project's default Image folder ( ./Images/ )</li>
       <li>To load a file that is inside the default Image folder click the image name</li>
       <li>The image should load and should be displayed using its default bands</li>
