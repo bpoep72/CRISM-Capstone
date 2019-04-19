@@ -241,9 +241,15 @@ class MineralClassfier:
 
     '''
         Use a student T distribution to make a prediction about the input image 
-        based on the model files data. Will expect that the images have been properly
-        normalized when coming into this function. This differs slightly based on the
-        so it is left outside this method.
+        based on the model files data. We do this by looking where a point would
+        fall along each of the distributions than we get a likihood (loglik) 
+        that that point came from that particular distribution (tpar). We then 
+        take the highest probability as the one that the ML algorithm would pick
+        for our test point based on its own models. I seperated the clauses because
+        originally they were all one one line and debugging was a nightmare, the
+        seperations were made arbitrarily based on character length independantly
+        they hold little to no meaning so they are not named more appropriately as
+        there is no real thing any of them are associated with.
 
         Params:
             image, the input image
