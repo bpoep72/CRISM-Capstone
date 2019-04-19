@@ -46,16 +46,7 @@ class GUI:
         
         # create menubar and menu options
         self.menubar = tk.Menu(root)
-        self.filemenu = tk.Menu(self.menubar, tearoff=0)
-        self.filemenu.add_command(label="Open Image File", command=self.openFile)
-        self.filemenu.add_command(label="Save Image As", command=self.saveFile)
-        self.menubar.add_cascade(label="File", menu=self.filemenu)
-        
-        self.helpmenu = tk.Menu(self.menubar, tearoff=0)
-        self.helpmenu.add_command(label="Documentation", command=self.documentation)
-        self.helpmenu.add_command(label="About", command=self.about)
-        self.menubar.add_cascade(label="Help", menu=self.helpmenu)
-        
+        self.fill_menu_bar()
         root.config(menu=self.menubar)
         
         # create pane system
@@ -125,6 +116,18 @@ class GUI:
 
     def fill_classifier_tab(self):
         pass
+
+    def fill_menu_bar(self):
+
+        self.filemenu = tk.Menu(self.menubar, tearoff=0)
+        self.filemenu.add_command(label="Open Image File", command=self.openFile)
+        self.filemenu.add_command(label="Save Image As", command=self.saveFile)
+        self.menubar.add_cascade(label="File", menu=self.filemenu)
+        
+        self.helpmenu = tk.Menu(self.menubar, tearoff=0)
+        self.helpmenu.add_command(label="Documentation", command=self.documentation)
+        self.helpmenu.add_command(label="About", command=self.about)
+        self.menubar.add_cascade(label="Help", menu=self.helpmenu)
 
     def fill_channel_tab(self):
 
