@@ -194,12 +194,14 @@ class GUI:
 
         #remove the entries in that are not .img files
         for file_name in directory_list:
+            #those conditions return true if the extension is the given string otherwise 0
             if(bool( len(file_name.split('.img'))-1 ) and not bool( len(file_name.split('.hdr'))-1 ) ):
                 image_list.append(file_name)
 
-        #clicked is out of the expected bounds do nothing
+        #if clicked is out of the expected bounds do nothing
         if(clicked > len(image_list) - 1 or clicked < 0):
             pass
+        #otherwise load the image
         else:
             self.image_path = os.path.join(parent, image_list[clicked])
             self.updateImage()
