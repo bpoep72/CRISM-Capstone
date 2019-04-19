@@ -138,16 +138,23 @@ class GUI:
         self.slogsLabel.grid(row=2, column=0)
         
         self.medianEntry = tk.Entry(self.paramTab)
+        self.medianEntry.insert(0, self.median_filter_window_size)
         self.medianEntry.grid(row=0, column=1)
         
         self.ratioEntry = tk.Entry(self.paramTab)
+        self.ratioEntry.insert(0, self.ratioing_window_size)
         self.ratioEntry.grid(row=1, column=1)
         
         self.slogsEntry = tk.Entry(self.paramTab)
+        self.slogsEntry.insert(0, self.highest_slogs)
         self.slogsEntry.grid(row=2, column=1)
         
         self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
         self.paramUpdate.grid(row=3, column=1)
+
+        #classification tab
+        self.classifierTab = tk.Frame(root)
+        self.tabs.add(self.classifierTab, text="Classification")
 
     # recursively fills in the file directory
     def process_directory(self, parent, path):
@@ -162,7 +169,7 @@ class GUI:
         self.item = self.tree.selection()[0]
 
     def updateColor(self):
-        print("updateColor")
+
         try:
             self.red = int(self.redEntry.get())
             self.blue = int(self.blueEntry.get())
@@ -174,7 +181,6 @@ class GUI:
             print("Input Invalid: update Color")
 
     def updateImage(self, display, r, g, b):
-        print("change color")
 
         #if an image has been loaded already
         if(self.image_path != None):
@@ -194,7 +200,6 @@ class GUI:
             pass
         
     def openFile(self):
-        print("open file")
 
         parent_path = os.path.dirname(os.path.abspath(__file__))
         
@@ -216,7 +221,6 @@ class GUI:
             pass
         
     def saveFile(self):
-        print("save file")
         
         fileName = tk.filedialog.asksaveasfilename(
                 defaultextension = '.png',
