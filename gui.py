@@ -98,8 +98,36 @@ class GUI:
         
         # create frame for channel switching
         self.channelTab = tk.Frame(root)
+        self.fill_channel_tab()
         self.tabs.add(self.channelTab, text="Channel Display")
         
+        # create frame for parameters
+        self.paramTab = tk.Frame(root)
+        self.fill_params_tab()
+        self.tabs.add(self.paramTab, text="Parameters")
+
+        #classification tab
+        self.classifierTab = tk.Frame(root)
+        self.fill_classifier_tab()
+        self.tabs.add(self.classifierTab, text="Classification")
+
+    # recursively fills in the file directory
+    def process_directory(self, parent, path):
+        for p in os.listdir(path):
+            abspath = os.path.join(path, p)
+
+            #leave out file headers to eliminate redundancy
+            is_header = bool(len(abspath.split('.hdr')) - 1)
+
+            #also leave out directories for now as they are too complicated to add
+            if(not is_header and not os.path.isdir(abspath)):
+                self.tree.insert(parent, 'end', text=p, open=False)
+
+    def fill_classifier_tab(self):
+        pass
+
+    def fill_channel_tab(self):
+
         # create labels, text boxes, and button for channel switching
         self.redLabel = tk.Label(self.channelTab, text="Red: ")
         self.redLabel.grid(row=0,column=0)
@@ -124,11 +152,8 @@ class GUI:
         
         self.colorUpdate = tk.Button(self.channelTab, text="Apply Channels", command=self.updateColor)
         self.colorUpdate.grid(row=3,column=1)
-        
-        # create frame for parameters
-        self.paramTab = tk.Frame(root)
-        self.tabs.add(self.paramTab, text="Parameters")
-        
+
+    def fill_params_tab(self):
         # create labels, text boxes, and button for parameters
         self.medianLabel = tk.Label(self.paramTab, text="Median Filtering Window Size")
         self.medianLabel.grid(row=0, column=0)
@@ -153,22 +178,6 @@ class GUI:
         
         self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
         self.paramUpdate.grid(row=3, column=1)
-
-        #classification tab
-        self.classifierTab = tk.Frame(root)
-        self.tabs.add(self.classifierTab, text="Classification")
-
-    # recursively fills in the file directory
-    def process_directory(self, parent, path):
-        for p in os.listdir(path):
-            abspath = os.path.join(path, p)
-
-            #leave out file headers to eliminate redundancy
-            is_header = bool(len(abspath.split('.hdr')) - 1)
-
-            #also leave out directories for now as they are too complicated to add
-            if(not is_header and not os.path.isdir(abspath)):
-                self.tree.insert(parent, 'end', text=p, open=False)
 
     '''
         Get the Image that was clicked when it is clicked inside the tree and open the image
@@ -205,6 +214,7 @@ class GUI:
             pass
         #otherwise load the image
         else:
+            self.image_name = image_list[clicked]
             self.image_path = os.path.join(parent, image_list[clicked])
             self.updateImage()
 
@@ -217,7 +227,7 @@ class GUI:
         #get bands from the image reader
         bands = self.image_reader.default_bands
 
-        #set the class attributes to match the bands from the above method
+        #set the class attributes to match the bands from the above method call
         self.red = bands[0]
         self.blue = bands[1]
         self.green = bands[2]
@@ -232,7 +242,6 @@ class GUI:
         self.greenEntry.delete(0, tk.END)
         self.greenEntry.insert(0, self.green)
         
-
     '''
         Update the color attributes based in the input in the fields under the
         Channel Display tab
@@ -247,7 +256,16 @@ class GUI:
 
             #if an image has actually been loaded
             if(self.image_name != 'placeholder.gif'):
-                self.updateImage()
+                #get the image from the imagereader
+                self.image = self.image_reader.get_raw_image()
+
+                #have imagereader update the display.png, returning the path to the image
+                path_to_image = self.image.get_three_channel(self.red, self.blue, self.green)
+                
+                #render the image pointed to the the path_to_image
+                self.photo = tk.PhotoImage(file=path_to_image)
+                self.display.image = self.photo
+                self.display.configure(image=self.display.image)
         #if coercion failed
         except:
             #TODO: Add input error message for user
@@ -275,7 +293,12 @@ class GUI:
         self.display.image = self.photo
         self.display.configure(image=self.display.image)
 
-        
+    '''
+        Open a file using a file dialog. Record the results then do 
+        what is neccasary to display the image. We need the image to
+        have .img extension. AND THE .HDR FILE MUST BE IN THE SAME
+        DIRECTORY
+    '''
     def openFile(self):
 
         parent_path = os.path.dirname(os.path.abspath(__file__))
@@ -296,7 +319,11 @@ class GUI:
         if(len(image_path) != 0):
             self.image_path = image_path
             self.updateImage()
-        
+    
+    '''
+        Save the current view of the image out to a place specfied by
+        a file dialog with the name that is given.
+    '''
     def saveFile(self):
         
         fileName = tk.filedialog.asksaveasfilename(
@@ -305,7 +332,8 @@ class GUI:
                              ('JPEG file', '.jpg'),
                              ('GIF file', '.gif'),
                              ('All Files', '.*')],
-                title = "Save Image File As"
+                title = "Save Image File As",
+                initialfile="image"
                 )
 
         #read in the image we use to display the image in the gui
@@ -362,6 +390,7 @@ class GUI:
 
         #if an image has not already been loaded
         else:
+            #TODO: Error message about needing to load an image
             pass
         
     def documentation(self):
