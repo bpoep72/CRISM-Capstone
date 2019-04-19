@@ -172,6 +172,8 @@ class GUI:
 
     '''
         Get the Image that was clicked when it is clicked inside the tree and open the image
+
+        This is a prime example of legacy code that you shouldn't touch.
     '''
     def tree_on_click(self, event):
         #the events are weirdly named 'I<some #>' get the number and add 1 to it to get the image that
@@ -317,17 +319,40 @@ class GUI:
         if(self.image != 'placeholder.gif'):
             try:
                 #we only want to recalculate anything on the backend if anything changes that would impact the output
+
+                #if median filtering changed
                 if(self.median_filter_window_size != int(self.medianEntry.get())):
-                    #if either of these values change we have to recalculate everything
-                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):  
+                    #if median filtering and rationg or highest slogs changed
+                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):
+                        print('everything rerun')
+
                         self.ratioing_window_size = int(self.ratioEntry.get())
                         self.highest_slogs = int(self.slogsEntry.get())
+                        self.median_filter_window_size = int(self.medianEntry.get())
                     
                         self.classifier.update_ratioing_parameters(self.highest_slogs, self.ratioing_window_size)
+                    #only median filtering changed
                     else:
+                        print('only median filtering')
                         self.median_filter_window_size = int(self.medianEntry.get())
-
+                        
                         self.classifier.update_median_filtering_parameters(self.median_filter_window_size)
+
+                #if median filtering did not change
+                else:
+                    #if ratioing or highest slogs changed
+                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):
+                        print('everything rerun')
+
+                        self.ratioing_window_size = int(self.ratioEntry.get())
+                        self.highest_slogs = int(self.slogsEntry.get())
+                        self.median_filter_window_size = int(self.medianEntry.get())
+                    
+                        self.classifier.update_ratioing_parameters(self.highest_slogs, self.ratioing_window_size)
+                    #nothing changed
+                    else:
+                        pass
+
             # if the input was not a valid int
             except:
                 #TODO: Add input error message for user
