@@ -399,7 +399,7 @@ class GUI:
     def documentation(self):
 
         #open the git page in a new browser tab if possible
-        webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython', new=2)
+        webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/tree/issue-8-integration#how-to-use-the-application', new=2)
         
     def about(self):
         # TODO: implementation
