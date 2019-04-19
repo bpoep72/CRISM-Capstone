@@ -31,17 +31,68 @@ class ImageReader:
 
     #where the specific bands we plan to use is defined
     bands_file_path = os.path.join(parent_directory, 'Resources', 'bands.txt')
+
     #head to the images directory
     image_dir = os.path.join(parent_directory, 'Images')
 
+    '''
+        Param:
+            str, imageFile: the image file without its extensions or the path
+    '''
     def __init__(self, imageFile):
         self.image_file = imageFile
-        self.header_bands = self.get_header_wavelengths()
         self.specific_bands = self.get_bands_file()
-        self.ignore_value = self.get_header_data_ignore_value()
 
-    def __del__(self):
-        pass
+        if(len(self.image_file) > 0):
+            self.header_bands = self.get_header_wavelengths() #the wavelengths from the header file
+            self.ignore_value = self.get_header_data_ignore_value() #the data ignore value
+            self.default_bands = self.get_default_bands() #the image's default bands
+        else:
+            self.header_bands = None
+            self.ignore_value = None
+            self.default_bands = None
+
+    '''
+        Get the default bands from the header files.
+    '''
+    def get_default_bands(self):
+
+        #the string path of the image
+        full_path = os.path.join(self.image_dir, self.image_file)
+
+        #open the image reading in its header then the .img file
+        image_file = envi.open(full_path + ".hdr", full_path)
+
+        default_bands = image_file.metadata['default bands']
+
+        #cast all the bands to ints
+        for i in range(len(default_bands)):
+
+            default_bands[i] = int(default_bands[i])
+
+        return default_bands
+
+    '''
+        Update the image this instance of ImageReader points to and 
+        recalculate all the required values.
+
+        Params:
+            str, path: the new full path of the new image
+    '''
+    def update_image(self, path):
+
+        #split the file name from its parent directory
+        self.image_file = os.path.split(path)[1]
+
+        #save the new parent directory
+        self.image_dir = os.path.split(path)[0]
+        
+        #check that the default bands are the same
+        self.default_bands = self.get_default_bands()
+
+        self.header_bands = self.get_header_wavelengths()
+        self.ignore_value = self.get_header_data_ignore_value()
+        
 
     '''
     Match the bands that came from the bands.txt file to the bands from the
@@ -77,33 +128,20 @@ class ImageReader:
     Throws: FileNotFoundError if file does not exist
     '''
     def get_header_wavelengths(self):
-        header = self.image_file + ".hdr"
 
-        #get the wavelenghts from the header file
-        with open(os.path.join(self.image_dir, header)) as header_file:
-            file = header_file.read()
+        #the string path of the image
+        full_path = os.path.join(self.image_dir, self.image_file)
 
-            #get the index where the waves start at
-            word = "wavelength = {"
-            start_index = file.find(word) + len(word) + 1
+        #open the image reading in its header then the .img file
+        image_file = envi.open(full_path + ".hdr", full_path)
 
-            #get the place where the waves end
-            word = "}"
-            end_index = file.find(word, start_index)
+        header_bands = image_file.metadata['wavelength']
 
-            #get the bands from the header file
-            header_bands = file[start_index:end_index]
+        for i in range(len(header_bands)):
 
-            #get rid of end the end line character
-            header_bands = header_bands.replace("\n", "")
-            #split the csv file
-            header_bands = header_bands.split(", ")
+            header_bands[i] = float(header_bands[i])
 
-            #convert to float
-            for i in range(len(header_bands)):
-                header_bands[i] = float(header_bands[i])
-
-            return header_bands
+        return header_bands
 
     '''
     The header has a field where it tells of a value the instrument assigns
@@ -114,23 +152,16 @@ class ImageReader:
     Throws: FileNotFoundError if file does not exist
     '''
     def get_header_data_ignore_value(self):
-        header = self.image_file + ".hdr"
 
-        #get the data ignore value from the header file
-        with open(os.path.join(self.image_dir, header)) as header_file:
-            file = header_file.read()
+        #the string path of the image
+        full_path = os.path.join(self.image_dir, self.image_file)
 
-            #get the index where the data ignore value is at
-            word = "data ignore value = "
-            start_index = file.find(word) + len(word)
+        #open the image reading in its header then the .img file
+        image_file = envi.open(full_path + ".hdr", full_path)
 
-            #the end of line character
-            word = "\n"
-            end_index = file.find(word, start_index)
+        ignore_value = float(image_file.metadata['data ignore value'])
 
-            ignore_value = file[start_index:end_index]
-
-            return float(ignore_value)
+        return ignore_value
 
     '''
     Get the specific bands that we work with for this project so that the

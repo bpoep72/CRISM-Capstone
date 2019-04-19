@@ -7,6 +7,8 @@
   <li>NumPy</li>
   <li>matlib</li>
   <li>matplot</li>
+  <li>Tkinter</li>
+  <li>Pillow (PIL)</li>
 </ul>
 <h3>NOT Packaged with Anaconda</h3>
 <ul>

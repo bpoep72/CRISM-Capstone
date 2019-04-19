@@ -26,6 +26,9 @@ class Layer:
         #the color assigned to is layer
         self.color = color
 
+        #whether the layer is currerently expected to be visible or not
+        self.is_visible = True
+
     def get_mineral_name(self):
 
         name = "Mineral " + str(self.mineral_label) 

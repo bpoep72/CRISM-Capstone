@@ -11,6 +11,8 @@ data will be achieved through this wrapper.
 import numpy as numpy
 import spectral as spectral
 import sys
+from matplotlib import pyplot
+import os
 
 class CRISMImage:
     
@@ -28,18 +30,17 @@ class CRISMImage:
         self.columns = len(self.raw_image[0])
         self.dimensions = len(self.raw_image[0][0])
 
-        #initilized only if preprocessing runs.
+
         self.ignore_matrix = None
-        self.normalized_image = None
         self.preprocess()
+        #removed to save performance
+        #self.normalized_image = self.norm_image()
          
     def __del__(self):
         del self.raw_image
 
     '''
-        These are the preprocessing tasks, some of these can take a large amount of time
-        and thus they were added to this method so that toggling it could be made easier
-        should such a need arise later on.
+        The preprocessing tasks. Set here to enable toggling.
 
         Params: None
         Returns: None
@@ -222,39 +223,50 @@ class CRISMImage:
         min_value = self.get_band_min(band_number)
         max_value = self.get_band_max(band_number)
 
-        norm_band = numpy.zeros((self.rows, self.columns))
+        target_band = self.raw_image[:, :, band_number]
 
-        #if normalization was already done
-        if min_value == 0 and max_value == 1:
-            pass
-        else:
-            for i in range(self.rows):
-                for j in range(self.columns):
-                    old_value = self.raw_image[i, j, band_number]
-                    norm_band[i, j] = (old_value - min_value) / (max_value - min_value)
+        norm_band = (target_band - min_value) / (max_value - min_value)
 
         return norm_band
+
+    '''
+        Normalize the whole image for the sake of gui display of the image. (0-1 Floating point).
+
+        Params: None
+        Returns: numpy.float32 [][][], the normalized image
+    '''
+    def norm_image(self):
+
+        norm_image = numpy.zeros((self.rows, self.columns, self.dimensions))
+
+        for i in range(self.dimensions):
+            norm_image[:, :, i] = self.normalize_band(i)
+
+        return norm_image
 
     '''
         Get just the 3 bands that we need. Channels 1-3 will be RGB values that can be displayed using
         matlibplot's imshow function
 
-        Params: int, the channel numbers that you want to display
-        Returns: int[][][3], the 3 channel image as a matrix
+        Params: 3xint, the channel numbers that you want to display
+        Returns: str, the path where the image is stored at
     '''
     def get_three_channel(self, channel_1, channel_2, channel_3):
 
-        image = numpy.zeros((self.rows, self.columns, 3))
+        file_name = 'display.png'
 
-        norm_channel_1 = self.normalize_band(channel_1)
-        norm_channel_2 = self.normalize_band(channel_2)
-        norm_channel_3 = self.normalize_band(channel_3)
+        normalized_image = numpy.zeros((self.rows, self.columns, 3))
 
-        image[:, :, 0] = norm_channel_1
-        image[:, :, 1] = norm_channel_2
-        image[:, :, 2] = norm_channel_3
+        normalized_image[:, :, 0] = self.normalize_band(channel_1)
+        normalized_image[:, :, 1] = self.normalize_band(channel_2)
+        normalized_image[:, :, 2] = self.normalize_band(channel_3)
 
-        return image
+        pyplot.imsave(file_name, normalized_image)
+
+        path = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(path, '..', file_name)
+
+        return path
 
 if __name__ == "__main__":
     
@@ -265,5 +277,7 @@ if __name__ == "__main__":
 
     img = imr.get_raw_image()
 
-    pyplot.imshow(img.get_three_channel(233, 78, 13))
-    pyplot.show()
+    image = img.get_three_channel(233, 78, 13)
+
+    image = img.get_three_channel(100, 101, 102)
+

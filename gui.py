@@ -11,14 +11,18 @@ Include installation instructions
 import os
 import tkinter as tk
 from tkinter import filedialog, ttk
-from spectral import *
 import spectral.io.envi as envi
 from PIL import Image, ImageTk
 
+import webbrowser
+import matplotlib
+
+from classifiers.imagereader import ImageReader
+
 # default channels for hyperspectral image (usually 233, 78, 13)
-RED_BASE = 233
-BLUE_BASE = 78
-GREEN_BASE = 13
+RED_BASE = 0
+BLUE_BASE = 0
+GREEN_BASE = 0
 
 class GUI:
     def __init__(self, root):
@@ -26,6 +30,15 @@ class GUI:
         self.red = RED_BASE
         self.blue = BLUE_BASE
         self.green = GREEN_BASE
+
+        #placeholders for the backend variables
+        self.image_reader = ImageReader("")
+        self.classifier = None
+        self.image_name = 'placeholder.gif'
+        self.image = None
+        self.median_filter_window_size = 17
+        self.highest_slogs = 5
+        self.ratioing_window_size = 25
         
         # initialize root of GUI
         self.root = root
@@ -54,17 +67,23 @@ class GUI:
         #self.treeFrame.grid(row=0, column=0, sticky="n,s,e,w")
         
         self.tree = ttk.Treeview(self.treeFrame)
+        self.tree.heading('#0', text=os.path.dirname(__file__), anchor='w')
         self.tree.pack(expand=True, fill=tk.BOTH)
-        self.tree.bind("<Double-1>", self.onDoubleClick)
-        
-        abspath = os.path.abspath("C:")
-        root_node = self.tree.insert('', 'end', text=abspath, open=True)
+        self.tree.bind('<<TreeviewSelect>>', self.tree_on_click)
+
+        #point the parent directory this file was called from
+        abspath = os.path.dirname(os.path.realpath(__file__))
+        #go down a directory to point at the images directory
+        abspath = os.path.join(abspath, 'Images')
+        tree_root_name = 'Images'
+        root_node = self.tree.insert('', 'end', text=tree_root_name, open=True)
         self.process_directory(root_node, abspath)
         
         self.paneSystem.add(self.treeFrame, sticky="n,s,e,w", stretch="always")
         
         # open default image in image display
-        self.photo = tk.PhotoImage(file="displayStart.gif")
+        placeholder_image_dir = os.path.join(abspath, 'placeholder.gif')
+        self.photo = tk.PhotoImage(file=placeholder_image_dir)
         self.display = tk.Label(root, image=self.photo)
         self.display.image = self.photo
         #self.display.grid(row=0, column=1, sticky="n,s,e,w")
@@ -92,15 +111,15 @@ class GUI:
         self.greenLabel.grid(row=2,column=0)
         
         self.redEntry = tk.Entry(self.channelTab)
-        self.redEntry.insert(0, RED_BASE)
+        self.redEntry.insert(0, self.red)
         self.redEntry.grid(row=0,column=1)
         
         self.blueEntry = tk.Entry(self.channelTab)
-        self.blueEntry.insert(0, BLUE_BASE)
+        self.blueEntry.insert(0, self.blue)
         self.blueEntry.grid(row=1,column=1)
         
         self.greenEntry = tk.Entry(self.channelTab)
-        self.greenEntry.insert(0, GREEN_BASE)
+        self.greenEntry.insert(0, self.green)
         self.greenEntry.grid(row=2,column=1)
         
         self.colorUpdate = tk.Button(self.channelTab, text="Apply Channels", command=self.updateColor)
@@ -121,100 +140,238 @@ class GUI:
         self.slogsLabel.grid(row=2, column=0)
         
         self.medianEntry = tk.Entry(self.paramTab)
+        self.medianEntry.insert(0, self.median_filter_window_size)
         self.medianEntry.grid(row=0, column=1)
         
-        self.ratioLabel = tk.Entry(self.paramTab)
-        self.ratioLabel.grid(row=1, column=1)
+        self.ratioEntry = tk.Entry(self.paramTab)
+        self.ratioEntry.insert(0, self.ratioing_window_size)
+        self.ratioEntry.grid(row=1, column=1)
         
-        self.slogsLabel = tk.Entry(self.paramTab)
-        self.slogsLabel.grid(row=2, column=1)
+        self.slogsEntry = tk.Entry(self.paramTab)
+        self.slogsEntry.insert(0, self.highest_slogs)
+        self.slogsEntry.grid(row=2, column=1)
         
         self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
         self.paramUpdate.grid(row=3, column=1)
+
+        #classification tab
+        self.classifierTab = tk.Frame(root)
+        self.tabs.add(self.classifierTab, text="Classification")
 
     # recursively fills in the file directory
     def process_directory(self, parent, path):
         for p in os.listdir(path):
             abspath = os.path.join(path, p)
-            isdir = os.path.isdir(abspath)
-            oid = self.tree.insert(parent, 'end', text=p, open=False)
-            if isdir:
-                self.process_directory(oid, abspath)
 
-    def onDoubleClick(self, event):
-        self.item = self.tree.selection()[0]
+            #leave out file headers to eliminate redundancy
+            is_header = bool(len(abspath.split('.hdr')) - 1)
 
+            #also leave out directories for now as they are too complicated to add
+            if(not is_header and not os.path.isdir(abspath)):
+                self.tree.insert(parent, 'end', text=p, open=False)
+
+    '''
+        Get the Image that was clicked when it is clicked inside the tree and open the image
+
+        This is a prime example of legacy code that you shouldn't touch.
+    '''
+    def tree_on_click(self, event):
+        #the events are weirdly named 'I<some #>' get the number and add 1 to it to get the image that
+        #was selected from within the directory
+        clicked = self.tree.selection()[0]
+        
+        #remove the I
+        clicked = clicked[1:]
+        #cast to int
+        clicked = int(clicked)
+        clicked -= 2
+
+        #the parent directory of this file
+        parent = os.path.dirname(__file__)
+        #the parent of the default images directory
+        parent = os.path.join(parent, 'Images')
+
+        directory_list = os.listdir(parent)
+        image_list = []
+
+        #remove the entries in that are not .img files
+        for file_name in directory_list:
+            #those conditions return true if the extension is the given string otherwise 0
+            if(bool( len(file_name.split('.img'))-1 ) and not bool( len(file_name.split('.hdr'))-1 ) ):
+                image_list.append(file_name)
+
+        #if clicked is out of the expected bounds do nothing
+        if(clicked > len(image_list) - 1 or clicked < 0):
+            pass
+        #otherwise load the image
+        else:
+            self.image_path = os.path.join(parent, image_list[clicked])
+            self.updateImage()
+
+    '''
+        Get the default bands from the image reader and set the neccasary attributes
+        to assign the current state of the GUI to use these bands.
+    '''
+    def get_default_bands(self):
+
+        #get bands from the image reader
+        bands = self.image_reader.default_bands
+
+        #set the class attributes to match the bands from the above method
+        self.red = bands[0]
+        self.blue = bands[1]
+        self.green = bands[2]
+
+        #update the tk.Entry fields
+        self.redEntry.delete(0, tk.END)
+        self.redEntry.insert(0, self.red)
+
+        self.blueEntry.delete(0, tk.END)
+        self.blueEntry.insert(0, self.blue)
+
+        self.greenEntry.delete(0, tk.END)
+        self.greenEntry.insert(0, self.green)
+        
+
+    '''
+        Update the color attributes based in the input in the fields under the
+        Channel Display tab
+    '''
     def updateColor(self):
-        print("updateColor")
-        
-        self.red = int(self.redEntry.get())
-        self.blue = int(self.blueEntry.get())
-        self.green = int(self.greenEntry.get())
-        
-        self.updateImage(self.display, self.red, self.blue, self.green)
 
-    def updateImage(self, display, r, g, b):
-        print("change color")
+        try:
+            #attempt type coercion
+            self.red = int(self.redEntry.get())
+            self.blue = int(self.blueEntry.get())
+            self.green = int(self.greenEntry.get())
+
+            #if an image has actually been loaded
+            if(self.image_name != 'placeholder.gif'):
+                self.updateImage()
+        #if coercion failed
+        except:
+            #TODO: Add input error message for user
+            print("Input Invalid: update Color")
+
+    '''
+        Update the display of the image based on the 
+    '''
+    def updateImage(self):
+
+        #update the path image reader points at
+        self.image_reader.update_image(self.image_path)
+
+        #get the default bands
+        self.get_default_bands()
+
+        #get the image from the imagereader
+        self.image = self.image_reader.get_raw_image()
+
+        #have imagereader update the display.png, returning the path to the image
+        path_to_image = self.image.get_three_channel(self.red, self.blue, self.green)
         
-        # reads in the hyperspectral image and creates a view of it
-        self.hsi = envi.open(self.header, self.image)
-        self.view = imshow(self.hsi, [r, g, b], stretch=(0, 0.9))
-        print(self.view)
-        save_rgb("display.gif", self.hsi, [r, g, b], stretch=(0, 0.9), format='gif')
-        
-        self.photo = tk.PhotoImage(file="display.gif")
+        #render the image pointed to the the path_to_image
+        self.photo = tk.PhotoImage(file=path_to_image)
         self.display.image = self.photo
-        #self.display = tk.Label(self.root, image=self.photoSave)
         self.display.configure(image=self.display.image)
+
         
     def openFile(self):
-        print("open file")
+
+        parent_path = os.path.dirname(os.path.abspath(__file__))
         
-        self.image = tk.filedialog.askopenfilename(
+        image_path = tk.filedialog.askopenfilename(
+                initialdir = os.path.join(parent_path, 'Images'),
                 defaultextension = '.img',
                 filetypes = [('Hyperspectral Image Files', '.img'), ('All Files', '.*')],
                 title = "Open Image File"
                 )
-        
-        self.header = self.image + ".hdr"
-        
-        self.updateColor()
+
+        #the instruction above returns os dependant paths make them independent of os again
+        image_path = os.path.abspath(image_path)
+        #update the current image name
+        self.image_name = os.path.split(image_path)[1]
+
+        #Only update if the an image was selected
+        if(len(image_path) != 0):
+            self.image_path = image_path
+            self.updateImage()
         
     def saveFile(self):
-        print("save file")
         
-        self.fileName = tk.filedialog.asksaveasfilename(
-                defaultextension = '.jpg',
-                filetypes = [('JPEG file', '.jpg'),
+        fileName = tk.filedialog.asksaveasfilename(
+                defaultextension = '.png',
+                filetypes = [('PNG file', '.png'),
+                             ('JPEG file', '.jpg'),
                              ('GIF file', '.gif'),
-                             ('PNG file', '.png'),
                              ('All Files', '.*')],
                 title = "Save Image File As"
                 )
-        
-        # obtains the short file name minus the path and the file extension
-        indexName = self.fileName.rfind('/')
-        self.fileName = self.fileName[indexName+1:]
-        indexExt = self.fileName.rfind('.')
-        self.fileExtension = self.fileName[indexExt+1:]
-        
-        # format only accepts "jpeg", not "jpg"
-        if(self.fileExtension == "jpg"):
-            self.fileExtension = "jpeg"
-        
-        save_rgb(self.fileName, self.hsi, [self.red, self.blue, self.green], stretch=(0, 0.9), format=self.fileExtension)
+
+        img = matplotlib.image.imread('display.png')
+        matplotlib.image.imsave(fileName, img)
 
     def updateParam(self):
         # TODO: implementation
         print("Parameters Updated")
+
+        #if an image has been loaded already
+        if(self.image != 'placeholder.gif'):
+            try:
+                #we only want to recalculate anything on the backend if anything changes that would impact the output
+
+                #if median filtering changed
+                if(self.median_filter_window_size != int(self.medianEntry.get())):
+                    #if median filtering and rationg or highest slogs changed
+                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):
+                        print('everything rerun')
+
+                        self.ratioing_window_size = int(self.ratioEntry.get())
+                        self.highest_slogs = int(self.slogsEntry.get())
+                        self.median_filter_window_size = int(self.medianEntry.get())
+                    
+                        self.classifier.update_ratioing_parameters(self.highest_slogs, self.ratioing_window_size)
+                    #only median filtering changed
+                    else:
+                        print('only median filtering')
+                        self.median_filter_window_size = int(self.medianEntry.get())
+                        
+                        self.classifier.update_median_filtering_parameters(self.median_filter_window_size)
+
+                #if median filtering did not change
+                else:
+                    #if ratioing or highest slogs changed
+                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):
+                        print('everything rerun')
+
+                        self.ratioing_window_size = int(self.ratioEntry.get())
+                        self.highest_slogs = int(self.slogsEntry.get())
+                        self.median_filter_window_size = int(self.medianEntry.get())
+                    
+                        self.classifier.update_ratioing_parameters(self.highest_slogs, self.ratioing_window_size)
+                    #nothing changed
+                    else:
+                        pass
+
+            # if the input was not a valid int
+            except:
+                #TODO: Add input error message for user
+                print("Input Invalid")
+
+        #if an image has not already been loaded
+        else:
+            pass
         
     def documentation(self):
-        # TODO: implementation
-        print("Documentation")
+
+        #open the git page in a new browser tab if possible
+        webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython', new=2)
         
     def about(self):
         # TODO: implementation
         print("About")
+
+        
 
 def main():
     root = tk.Tk()

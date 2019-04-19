@@ -1,6 +1,7 @@
 
 #Ignore the images since they are too large
-Images/
+Images/*.img
+Images/*.hdr
 
 #ignore IDE files
 .spyproject/
@@ -12,3 +13,7 @@ Images/
 
 #ignore test file cache
 .pytest_cache/
+
+#ignore the gui image
+display.gif
+display.png
