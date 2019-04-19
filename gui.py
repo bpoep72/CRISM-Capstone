@@ -67,8 +67,9 @@ class GUI:
         #self.treeFrame.grid(row=0, column=0, sticky="n,s,e,w")
         
         self.tree = ttk.Treeview(self.treeFrame)
+        self.tree.heading('#0', text=os.path.dirname(__file__), anchor='w')
         self.tree.pack(expand=True, fill=tk.BOTH)
-        self.tree.bind("<Double-1>", self.onDoubleClick)
+        self.tree.bind('<<TreeviewSelect>>', self.tree_on_click)
 
         #point the parent directory this file was called from
         abspath = os.path.dirname(os.path.realpath(__file__))
@@ -161,13 +162,47 @@ class GUI:
     def process_directory(self, parent, path):
         for p in os.listdir(path):
             abspath = os.path.join(path, p)
-            isdir = os.path.isdir(abspath)
-            oid = self.tree.insert(parent, 'end', text=p, open=False)
-            if isdir:
-                self.process_directory(oid, abspath)
 
-    def onDoubleClick(self, event):
-        self.item = self.tree.selection()[0]
+            #leave out file headers to eliminate redundancy
+            is_header = bool(len(abspath.split('.hdr')) - 1)
+
+            #also leave out directories for now as they are too complicated to add
+            if(not is_header and not os.path.isdir(abspath)):
+                self.tree.insert(parent, 'end', text=p, open=False)
+
+    '''
+        Get the Image that was clicked when it is clicked inside the tree and open the image
+    '''
+    def tree_on_click(self, event):
+        #the events are weirdly named 'I<some #>' get the number and add 1 to it to get the image that
+        #was selected from within the directory
+        clicked = self.tree.selection()[0]
+        
+        #remove the I
+        clicked = clicked[1:]
+        #cast to int
+        clicked = int(clicked)
+        clicked -= 2
+
+        #the parent directory of this file
+        parent = os.path.dirname(__file__)
+        #the parent of the default images directory
+        parent = os.path.join(parent, 'Images')
+
+        directory_list = os.listdir(parent)
+        image_list = []
+
+        #remove the entries in that are not .img files
+        for file_name in directory_list:
+            if(bool( len(file_name.split('.img'))-1 ) and not bool( len(file_name.split('.hdr'))-1 ) ):
+                image_list.append(file_name)
+
+        #clicked is out of the expected bounds do nothing
+        if(clicked > len(image_list) - 1 or clicked < 0):
+            pass
+        else:
+            self.image_path = os.path.join(parent, image_list[clicked])
+            self.updateImage()
 
     '''
         Get the default bands from the image reader and set the neccasary attributes

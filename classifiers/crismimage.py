@@ -33,7 +33,8 @@ class CRISMImage:
 
         self.ignore_matrix = None
         self.preprocess()
-        self.normalized_image = self.norm_image()
+        #removed to save performance
+        #self.normalized_image = self.norm_image()
          
     def __del__(self):
         del self.raw_image
@@ -254,8 +255,13 @@ class CRISMImage:
 
         file_name = 'display.png'
 
-        image = self.normalized_image[:, :, (channel_1, channel_2, channel_3)]
-        pyplot.imsave(file_name, image)
+        normalized_image = numpy.zeros((self.rows, self.columns, 3))
+
+        normalized_image[:, :, 0] = self.normalize_band(channel_1)
+        normalized_image[:, :, 1] = self.normalize_band(channel_2)
+        normalized_image[:, :, 2] = self.normalize_band(channel_3)
+
+        pyplot.imsave(file_name, normalized_image)
 
         path = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(path, '..', file_name)
