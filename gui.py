@@ -308,7 +308,9 @@ class GUI:
                 title = "Save Image File As"
                 )
 
+        #read in the image we use to display the image in the gui
         img = matplotlib.image.imread('display.png')
+        #save it out using the name and extension we were given by asksaveasfilename
         matplotlib.image.imsave(fileName, img)
 
     def updateParam(self):
@@ -375,7 +377,7 @@ class GUI:
 
 def main():
     root = tk.Tk()
-    mainGUI = GUI(root)
+    GUI(root)
     root.mainloop()
 
 if __name__ == "__main__":
