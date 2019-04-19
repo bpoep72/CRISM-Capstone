@@ -20,9 +20,9 @@ import matplotlib
 from classifiers.imagereader import ImageReader
 
 # default channels for hyperspectral image (usually 233, 78, 13)
-RED_BASE = 233
-BLUE_BASE = 78
-GREEN_BASE = 13
+RED_BASE = 0
+BLUE_BASE = 0
+GREEN_BASE = 0
 
 class GUI:
     def __init__(self, root):
@@ -169,36 +169,73 @@ class GUI:
     def onDoubleClick(self, event):
         self.item = self.tree.selection()[0]
 
+    '''
+        Get the default bands from the image reader and set the neccasary attributes
+        to assign the current state of the GUI to use these bands.
+    '''
+    def get_default_bands(self):
+
+        #get bands from the image reader
+        bands = self.image_reader.default_bands
+
+        #set the class attributes to match the bands from the above method
+        self.red = bands[0]
+        self.blue = bands[1]
+        self.green = bands[2]
+
+        #update the tk.Entry fields
+        self.redEntry.delete(0, tk.END)
+        self.redEntry.insert(0, self.red)
+
+        self.blueEntry.delete(0, tk.END)
+        self.blueEntry.insert(0, self.blue)
+
+        self.greenEntry.delete(0, tk.END)
+        self.greenEntry.insert(0, self.green)
+        
+
+    '''
+        Update the color attributes based in the input in the fields under the
+        Channel Display tab
+    '''
     def updateColor(self):
 
         try:
+            #attempt type coercion
             self.red = int(self.redEntry.get())
             self.blue = int(self.blueEntry.get())
             self.green = int(self.greenEntry.get())
 
-            self.updateImage(self.display, self.red, self.blue, self.green)
+            #if an image has actually been loaded
+            if(self.image_name != 'placeholder.gif'):
+                self.updateImage()
+        #if coercion failed
         except:
             #TODO: Add input error message for user
             print("Input Invalid: update Color")
 
-    def updateImage(self, display, r, g, b):
+    '''
+        Update the display of the image based on the 
+    '''
+    def updateImage(self):
 
-        #if an image has been loaded already
-        if(self.image_path != None):
+        #update the path image reader points at
+        self.image_reader.update_image(self.image_path)
+
+        #get the default bands
+        self.get_default_bands()
+
+        #get the image from the imagereader
+        self.image = self.image_reader.get_raw_image()
+
+        #have imagereader update the display.png, returning the path to the image
+        path_to_image = self.image.get_three_channel(self.red, self.blue, self.green)
         
-            self.image_reader.update_image(self.image_path)
-            self.image = self.image_reader.get_raw_image()
-            path_to_image = self.image.get_three_channel(self.red, self.blue, self.green)
-            
-            self.photo = tk.PhotoImage(file=path_to_image)
-            self.display.image = self.photo
+        #render the image pointed to the the path_to_image
+        self.photo = tk.PhotoImage(file=path_to_image)
+        self.display.image = self.photo
+        self.display.configure(image=self.display.image)
 
-            self.display.configure(image=self.display.image)
-
-        #the only image loaded so far is the place holder image
-        #TODO: maybe add a notification to load an image otherwise nothing happens here
-        else:
-            pass
         
     def openFile(self):
 
@@ -213,13 +250,13 @@ class GUI:
 
         #the instruction above returns os dependant paths make them independent of os again
         image_path = os.path.abspath(image_path)
+        #update the current image name
+        self.image_name = os.path.split(image_path)[1]
 
-        #incase no image is selected
+        #Only update if the an image was selected
         if(len(image_path) != 0):
             self.image_path = image_path
-            self.updateColor()
-        else:
-            pass
+            self.updateImage()
         
     def saveFile(self):
         
@@ -240,7 +277,7 @@ class GUI:
         print("Parameters Updated")
 
         #if an image has been loaded already
-        if(self.image != None):
+        if(self.image != 'placeholder.gif'):
             try:
                 #we only want to recalculate anything on the backend if anything changes that would impact the output
                 if(self.median_filter_window_size != int(self.medianEntry.get())):
@@ -272,8 +309,6 @@ class GUI:
         # TODO: implementation
         print("About")
 
-    def get_default_bands(self):
-        pass
         
 
 def main():
