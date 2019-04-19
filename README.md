@@ -78,7 +78,7 @@
     <ul>
       <h4>Option 1: File Dialog</h4>
       <li>Hover over the File option in the top bound options menubar</li>
-      <li>In the drop down select Open File</li>
+      <li>In the drop down select Open Image File</li>
       <li>Select an image that is inside the default image folder Images or anywhere on your machine (To pick an image it must have the
       .img extension and the .hdr file MUST be the same directory)</li>
       <li>Click Open File</li>
@@ -90,6 +90,15 @@
       <li>To load a file that is inside the default Image folder click the image name</li>
       <li>The image should load and should be displayed using its default bands</li>
     </ul>
+    <li><h3 style="text-decoration:underline">Saving Images</h3></li>
+    <ul>
+      <li>Hover over the File option in the top bound options menubar</li>
+      <li>In the drop down select Save Image As</li>
+      <li>In the file dialog navigate to where you want to save the image</li>
+      <li>Change the name of the image if desired</li>
+      <li>Press Save</li>
+    </ul>
+
   </ul>
 
 <h2>Known Issues</h2>
