@@ -260,11 +260,16 @@ class GUI:
 
             max_band_number = len(self.image.bands)
 
-            if( r > max_band_number or g > max_band_number or b > max_band_number): #TODO: bound check
-                if( r > 0 or g > 0 or b > 0):
+            if( r < max_band_number and g < max_band_number and b < max_band_number): #TODO: bound check
+                if( r >= 0 and g >= 0 and b >= 0):
                     self.red = int(self.redEntry.get())
                     self.blue = int(self.blueEntry.get())
                     self.green = int(self.greenEntry.get())
+                else:
+                    raise
+            else:
+                raise
+
 
             #if an image has actually been loaded
             if(self.image_name != 'placeholder.gif'):
@@ -279,9 +284,10 @@ class GUI:
                 self.display.image = self.photo
                 self.display.configure(image=self.display.image)
         #if coercion failed
+        except AttributeError:
+            messagebox.showerror("Error", "An image has not been loaded")
         except:
-            #TODO: Add input error message for user
-            print("Input Invalid: update Color")
+            messagebox.showerror("Error", "Valid range for color channels is between 0 and 349")
 
     '''
         Update the display of the image based on the 
@@ -312,25 +318,27 @@ class GUI:
         DIRECTORY
     '''
     def openFile(self):
+        try:
+            parent_path = os.path.dirname(os.path.abspath(__file__))
+            
+            image_path = tk.filedialog.askopenfilename(
+                    initialdir = os.path.join(parent_path, 'Images'),
+                    defaultextension = '.img',
+                    filetypes = [('Hyperspectral Image Files', '.img')],
+                    title = "Open Image File"
+                    )
 
-        parent_path = os.path.dirname(os.path.abspath(__file__))
-        
-        image_path = tk.filedialog.askopenfilename(
-                initialdir = os.path.join(parent_path, 'Images'),
-                defaultextension = '.img',
-                filetypes = [('Hyperspectral Image Files', '.img'), ('All Files', '.*')],
-                title = "Open Image File"
-                )
+            #the instruction above returns os dependant paths make them independent of os again
+            image_path = os.path.abspath(image_path)
+            #update the current image name
+            self.image_name = os.path.split(image_path)[1]
 
-        #the instruction above returns os dependant paths make them independent of os again
-        image_path = os.path.abspath(image_path)
-        #update the current image name
-        self.image_name = os.path.split(image_path)[1]
-
-        #Only update if the an image was selected
-        if(len(image_path) != 0):
-            self.image_path = image_path
-            self.updateImage()
+            #Only update if the an image was selected
+            if(len(image_path) != 0):
+                self.image_path = image_path
+                self.updateImage()
+        except:
+            messagebox.showerror("Error", "The header file could not be found. Make sure it is in the same directory as the image.")
     
     '''
         Save the current view of the image out to a place specfied by
@@ -341,9 +349,7 @@ class GUI:
         fileName = tk.filedialog.asksaveasfilename(
                 defaultextension = '.png',
                 filetypes = [('PNG file', '.png'),
-                             ('JPEG file', '.jpg'),
-                             ('GIF file', '.gif'),
-                             ('All Files', '.*')],
+                             ('JPEG file', '.jpg')],
                 title = "Save Image File As",
                 initialfile="image"
                 )
@@ -398,11 +404,13 @@ class GUI:
             # if the input was not a valid int
             except:
                 #TODO: Add input error message for user
+                messagebox.showerror("Error", "All values must be positive integers. The window sizes must be odd. The maximum number of slogs must be less than 50.")
                 print("Input Invalid")
 
         #if an image has not already been loaded
         else:
             #TODO: Error message about needing to load an image
+            messagebox.showerror("Error", "An image has not been loaded")
             pass
         
     def documentation(self):
