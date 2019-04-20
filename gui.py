@@ -10,7 +10,7 @@ Include installation instructions
 
 import os
 import tkinter as tk
-from tkinter import filedialog, ttk
+from tkinter import filedialog, ttk, messagebox
 import spectral.io.envi as envi
 from PIL import Image, ImageTk
 
@@ -107,11 +107,12 @@ class GUI:
         for p in os.listdir(path):
             abspath = os.path.join(path, p)
 
-            #leave out file headers to eliminate redundancy
-            is_header = bool(len(abspath.split('.hdr')) - 1)
+            #determine if a file is .img
+            split_path = abspath.split('.')
+            is_img = bool(split_path[-1] == 'img')
 
             #also leave out directories for now as they are too complicated to add
-            if(not is_header and not os.path.isdir(abspath)):
+            if(is_img and not os.path.isdir(abspath)):
                 self.tree.insert(parent, 'end', text=p, open=False)
 
     def fill_classifier_tab(self):
@@ -208,8 +209,9 @@ class GUI:
 
         #remove the entries in that are not .img files
         for file_name in directory_list:
-            #those conditions return true if the extension is the given string otherwise 0 #TODO: remove non img files
-            if(bool( len(file_name.split('.img'))-1 ) and len(file_name.split('.img')[1]) ):
+            #those conditions return true if the extension is the given string otherwise 0
+            split_name = file_name.split('.')
+            if(split_name[-1] == 'img'):
                 image_list.append(file_name)
 
         #if clicked is out of the expected bounds do nothing
@@ -257,12 +259,11 @@ class GUI:
             b = int(self.blueEntry.get())
 
             max_band_number = len(self.image.bands)
-
-            if( r > max_band_number or g > max_band_number or b > max_band_number): #TODO: bound check
-                if( r > 0 or g > 0 or b > 0):
-                    self.red = int(self.redEntry.get())
-                    self.blue = int(self.blueEntry.get())
-                    self.green = int(self.greenEntry.get())
+            assert r < max_band_number and g < max_band_number and b < max_band_number
+            assert r >= 0 and g >= 0 and b >= 0
+            self.red = int(self.redEntry.get())
+            self.blue = int(self.blueEntry.get())
+            self.green = int(self.greenEntry.get())
 
             #if an image has actually been loaded
             if(self.image_name != 'placeholder.gif'):
@@ -277,9 +278,10 @@ class GUI:
                 self.display.image = self.photo
                 self.display.configure(image=self.display.image)
         #if coercion failed
-        except:
-            #TODO: Add input error message for user
-            print("Input Invalid: update Color")
+        except AttributeError:
+            messagebox.showerror("Error", "An image has not been loaded")
+        except AssertionError:
+            messagebox.showerror("Error", "Valid range for color channels is between 0 and 349")
 
     '''
         Update the display of the image based on the 
@@ -310,25 +312,27 @@ class GUI:
         DIRECTORY
     '''
     def openFile(self):
+        try:
+            parent_path = os.path.dirname(os.path.abspath(__file__))
+            
+            image_path = tk.filedialog.askopenfilename(
+                    initialdir = os.path.join(parent_path, 'Images'),
+                    defaultextension = '.img',
+                    filetypes = [('Hyperspectral Image Files', '.img')],
+                    title = "Open Image File"
+                    )
 
-        parent_path = os.path.dirname(os.path.abspath(__file__))
-        
-        image_path = tk.filedialog.askopenfilename(
-                initialdir = os.path.join(parent_path, 'Images'),
-                defaultextension = '.img',
-                filetypes = [('Hyperspectral Image Files', '.img'), ('All Files', '.*')],
-                title = "Open Image File"
-                )
+            #the instruction above returns os dependant paths make them independent of os again
+            image_path = os.path.abspath(image_path)
+            #update the current image name
+            self.image_name = os.path.split(image_path)[1]
 
-        #the instruction above returns os dependant paths make them independent of os again
-        image_path = os.path.abspath(image_path)
-        #update the current image name
-        self.image_name = os.path.split(image_path)[1]
-
-        #Only update if the an image was selected
-        if(len(image_path) != 0):
-            self.image_path = image_path
-            self.updateImage()
+            #Only update if the an image was selected
+            if(len(image_path) != 0):
+                self.image_path = image_path
+                self.updateImage()
+        except:
+            messagebox.showerror("Error", "The header file could not be found. Make sure it is in the same directory as the image.")
     
     '''
         Save the current view of the image out to a place specfied by
@@ -339,9 +343,7 @@ class GUI:
         fileName = tk.filedialog.asksaveasfilename(
                 defaultextension = '.png',
                 filetypes = [('PNG file', '.png'),
-                             ('JPEG file', '.jpg'),
-                             ('GIF file', '.gif'),
-                             ('All Files', '.*')],
+                             ('JPEG file', '.jpg')],
                 title = "Save Image File As",
                 initialfile="image"
                 )
@@ -396,11 +398,13 @@ class GUI:
             # if the input was not a valid int
             except:
                 #TODO: Add input error message for user
+                messagebox.showerror("Error", "All values must be positive integers. The window sizes must be odd. The maximum number of slogs must be less than 50.")
                 print("Input Invalid")
 
         #if an image has not already been loaded
         else:
             #TODO: Error message about needing to load an image
+            messagebox.showerror("Error", "An image has not been loaded")
             pass
         
     def documentation(self):
