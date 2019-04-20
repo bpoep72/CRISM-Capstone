@@ -41,7 +41,8 @@ class ClassificationMap:
         for i in range(len(layers)):
             
             if(self.layers[i].is_visible):
-                
+
+                matplotlib.pyplot.imshow(self.layers[i].prediction_matrix, )
 
     '''
         Produces the layered classification map
