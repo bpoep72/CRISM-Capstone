@@ -10,7 +10,7 @@ Include installation instructions
 
 import os
 import tkinter as tk
-from tkinter import filedialog, ttk
+from tkinter import filedialog, ttk, messagebox
 import spectral.io.envi as envi
 from PIL import Image, ImageTk
 
@@ -107,11 +107,12 @@ class GUI:
         for p in os.listdir(path):
             abspath = os.path.join(path, p)
 
-            #leave out file headers to eliminate redundancy
-            is_header = bool(len(abspath.split('.hdr')) - 1)
+            #determine if a file is .img
+            split_path = abspath.split('.')
+            is_img = bool(split_path[-1] == 'img')
 
             #also leave out directories for now as they are too complicated to add
-            if(not is_header and not os.path.isdir(abspath)):
+            if(is_img and not os.path.isdir(abspath)):
                 self.tree.insert(parent, 'end', text=p, open=False)
 
     def fill_classifier_tab(self):
@@ -208,8 +209,9 @@ class GUI:
 
         #remove the entries in that are not .img files
         for file_name in directory_list:
-            #those conditions return true if the extension is the given string otherwise 0 #TODO: remove non img files
-            if(bool( len(file_name.split('.img'))-1 ) and len(file_name.split('.img')[1]) ):
+            #those conditions return true if the extension is the given string otherwise 0
+            split_name = file_name.split('.')
+            if(split_name[-1] == 'img'):
                 image_list.append(file_name)
 
         #if clicked is out of the expected bounds do nothing
