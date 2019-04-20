@@ -46,9 +46,6 @@ class GUI:
         self.root = root
         root.title("CRISM Hyperspectral Image Display")
         
-        # maximize window
-        self.root.wm_state("zoomed")
-        
         # create menubar and menu options
         self.menubar = tk.Menu(root)
         self.fill_menu_bar()
@@ -121,28 +118,31 @@ class GUI:
                 self.tree.insert(parent, 'end', text=p, open=False)
 
     def fill_classifier_tab(self):
-        self.startClassifierButton = tk.Button(self.classifierTab, text="Start Classifier")
-        self.startClassifierButton.pack(side="top", fill="x")
-        
-        self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#F0F0F0")
-        self.frame = tk.Frame(self.canvas)
-        self.vsb = tk.Scrollbar(self.classifierTab, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.vsb.set)
-        
-        self.vsb.pack(side="right", fill="y")
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.canvas.create_window((2,12), window=self.frame, anchor="nw", tags="self.frame")
-        self.frame.bind("<Configure>", self.on_frame_configure)
-        
-        test_mat = numpy.random.rand(1)
-        self.cl = ClassificationMap(test_mat)
-        self.cl.make_random_map(0,0,3)
-        
-        self.mineralArray = []
-        self.mineralButtonArray = []
-        
-        for i in range(0, len(self.cl.layers)):
-            self.make_mineral(i)
+        if(self.image_name != 'placeholder.gif'):
+            self.startClassifierButton = tk.Button(self.classifierTab, text="Start Classifier")
+            self.startClassifierButton.pack(side="top", fill="x")
+            
+            self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#F0F0F0")
+            self.frame = tk.Frame(self.canvas)
+            self.vsb = tk.Scrollbar(self.classifierTab, orient="vertical", command=self.canvas.yview)
+            self.canvas.configure(yscrollcommand=self.vsb.set)
+            
+            self.vsb.pack(side="right", fill="y")
+            self.canvas.pack(side="left", fill="both", expand=True)
+            self.canvas.create_window((2,12), window=self.frame, anchor="nw", tags="self.frame")
+            self.frame.bind("<Configure>", self.on_frame_configure)
+            
+            test_mat = numpy.random.rand(1)
+
+            path_to_image = os.path.dirname(__file__)
+            path_to_image = os.path.join(path_to_image, 'display.png')
+            self.cl = ClassificationMap(test_mat, path_to_image)
+            
+            self.mineralArray = [] #TODO: ?
+            self.mineralButtonArray = [] #TODO: ?
+            
+            for i in range(0, len(self.cl.layers)):
+                self.make_mineral(i)
 
     # makes a label and radio button set for a single mineral
     def make_mineral(self, index):

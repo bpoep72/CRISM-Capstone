@@ -4,10 +4,24 @@
     it may be more easily used within the gui.
 '''
 
-from layer import Layer
 import numpy
 import matplotlib
 import PIL
+
+if __package__ is '':
+
+    #module is at the root of /classifiers/
+    import sys
+    from os import path
+    
+    sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+    
+    from layer import Layer
+
+else:
+
+    #module is at the root of the project
+    from classifiers.layer import Layer
 
 class ClassificationMap:
 
