@@ -208,8 +208,8 @@ class GUI:
 
         #remove the entries in that are not .img files
         for file_name in directory_list:
-            #those conditions return true if the extension is the given string otherwise 0
-            if(bool( len(file_name.split('.img'))-1 ) and not bool( len(file_name.split('.hdr'))-1 ) ):
+            #those conditions return true if the extension is the given string otherwise 0 #TODO: remove non img files
+            if(bool( len(file_name.split('.img'))-1 ) and len(file_name.split('.img')[1]) ):
                 image_list.append(file_name)
 
         #if clicked is out of the expected bounds do nothing
@@ -252,10 +252,17 @@ class GUI:
     def updateColor(self):
 
         try:
-            #attempt type coercion
-            self.red = int(self.redEntry.get())
-            self.blue = int(self.blueEntry.get())
-            self.green = int(self.greenEntry.get())
+            r = int(self.redEntry.get())
+            g = int(self.greenEntry.get())
+            b = int(self.blueEntry.get())
+
+            max_band_number = len(self.image.bands)
+
+            if( r > max_band_number or g > max_band_number or b > max_band_number): #TODO: bound check
+                if( r > 0 or g > 0 or b > 0):
+                    self.red = int(self.redEntry.get())
+                    self.blue = int(self.blueEntry.get())
+                    self.green = int(self.greenEntry.get())
 
             #if an image has actually been loaded
             if(self.image_name != 'placeholder.gif'):
