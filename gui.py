@@ -259,17 +259,11 @@ class GUI:
             b = int(self.blueEntry.get())
 
             max_band_number = len(self.image.bands)
-
-            if( r < max_band_number and g < max_band_number and b < max_band_number): #TODO: bound check
-                if( r >= 0 and g >= 0 and b >= 0):
-                    self.red = int(self.redEntry.get())
-                    self.blue = int(self.blueEntry.get())
-                    self.green = int(self.greenEntry.get())
-                else:
-                    raise
-            else:
-                raise
-
+            assert r < max_band_number and g < max_band_number and b < max_band_number
+            assert r >= 0 and g >= 0 and b >= 0
+            self.red = int(self.redEntry.get())
+            self.blue = int(self.blueEntry.get())
+            self.green = int(self.greenEntry.get())
 
             #if an image has actually been loaded
             if(self.image_name != 'placeholder.gif'):
@@ -286,7 +280,7 @@ class GUI:
         #if coercion failed
         except AttributeError:
             messagebox.showerror("Error", "An image has not been loaded")
-        except:
+        except AssertionError:
             messagebox.showerror("Error", "Valid range for color channels is between 0 and 349")
 
     '''
