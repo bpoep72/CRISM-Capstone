@@ -31,10 +31,12 @@ else:
 
 class MineralClassfier:
 
-    def __init__(self, image):
+    def __init__(self, image, median_filtering_mode):
 
         #image expects a CRISMImage
         self.image = image
+
+        self.median_filtering_mode = median_filtering_mode
 
         #the predefined model files need to be loaded
         self.mineral_model = self.get_model("mineral_classifier.npz")
