@@ -9,6 +9,7 @@ Include installation instructions
 """
 
 import os
+import numpy as numpy
 import tkinter as tk
 from tkinter import filedialog, ttk
 import spectral.io.envi as envi
@@ -18,6 +19,7 @@ import webbrowser
 import matplotlib
 
 from classifiers.imagereader import ImageReader
+from classifiers.classificationmap import ClassificationMap
 
 # default channels for hyperspectral image (usually 233, 78, 13)
 RED_BASE = 0
@@ -44,13 +46,16 @@ class GUI:
         self.root = root
         root.title("CRISM Hyperspectral Image Display")
         
+        # maximize window
+        self.root.wm_state("zoomed")
+        
         # create menubar and menu options
         self.menubar = tk.Menu(root)
         self.fill_menu_bar()
         root.config(menu=self.menubar)
         
         # create pane system
-        self.paneSystem = tk.PanedWindow(root, sashrelief=tk.RAISED)
+        self.paneSystem = tk.PanedWindow(root, sashrelief=tk.RAISED, sashwidth=10)
         self.paneSystem.pack(fill=tk.BOTH, expand=True)
         
         # create file directory system
@@ -115,7 +120,45 @@ class GUI:
                 self.tree.insert(parent, 'end', text=p, open=False)
 
     def fill_classifier_tab(self):
-        pass
+        self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#FFFFFF")
+        self.frame = tk.Frame(self.canvas)
+        self.vsb = tk.Scrollbar(self.classifierTab, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+        
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.create_window((2,12), window=self.frame, anchor="nw", tags="self.frame")
+        self.frame.bind("<Configure>", self.on_frame_configure)
+        
+        test_mat = numpy.random.rand(1)
+        self.cl = ClassificationMap(test_mat)
+        self.cl.make_random_map(0,0,3)
+        
+        self.mineralArray = []
+        self.mineralButtonArray = []
+        
+        for i in range(0, len(self.cl.layers)):
+            self.make_mineral(i)
+
+    # makes a label and radio button set for a single mineral
+    def make_mineral(self, index):
+        # creates the label and radio button
+        tempMineral = tk.Label(self.frame, text=self.cl.layers[index].mineral_name)
+        tempMineral.grid(row=index*3, column=0, rowspan=2)
+        tempMineralButton = tk.IntVar()
+        tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1).grid(row=index*3, column=1)
+        tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0).grid(row=index*3+1, column=1)
+        
+        # blank label for spacing
+        tk.Label(self.frame, text="").grid(row=index*3+2, column=0, columnspan=2)
+        
+        # puts the items within the array
+        self.mineralArray.append(tempMineral)
+        self.mineralButtonArray.append(tempMineralButton)
+        
+    def on_frame_configure(self, event):
+        # resets scroll region to encompass entire frame
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def fill_menu_bar(self):
 
@@ -403,7 +446,7 @@ class GUI:
         
     def about(self):
         # TODO: implementation
-        print("About")
+        webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/blob/master/README.md#about', new=2)
 
         
 
