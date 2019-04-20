@@ -120,7 +120,10 @@ class GUI:
                 self.tree.insert(parent, 'end', text=p, open=False)
 
     def fill_classifier_tab(self):
-        self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#FFFFFF")
+        self.startClassifierButton = tk.Button(self.classifierTab, text="Start Classifier")
+        self.startClassifierButton.pack(side="top", fill="x")
+        
+        self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#F0F0F0")
         self.frame = tk.Frame(self.canvas)
         self.vsb = tk.Scrollbar(self.classifierTab, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
@@ -146,8 +149,10 @@ class GUI:
         tempMineral = tk.Label(self.frame, text=self.cl.layers[index].mineral_name)
         tempMineral.grid(row=index*3, column=0, rowspan=2)
         tempMineralButton = tk.IntVar()
-        tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1).grid(row=index*3, column=1)
-        tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0).grid(row=index*3+1, column=1)
+        tempYes = tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1, command=self.update_classifier)
+        tempYes.grid(row=index*3, column=1)
+        tempNo = tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0, command=self.update_classifier)
+        tempNo.grid(row=index*3+1, column=1)
         
         # blank label for spacing
         tk.Label(self.frame, text="").grid(row=index*3+2, column=0, columnspan=2)
@@ -155,10 +160,13 @@ class GUI:
         # puts the items within the array
         self.mineralArray.append(tempMineral)
         self.mineralButtonArray.append(tempMineralButton)
-        
+    
+    # resets scroll region to encompass entire frame
     def on_frame_configure(self, event):
-        # resets scroll region to encompass entire frame
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        
+    def update_classifier(self):
+        pass
 
     def fill_menu_bar(self):
 
