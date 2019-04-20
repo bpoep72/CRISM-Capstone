@@ -6,6 +6,7 @@
 
 from layer import Layer
 import numpy
+import matplotlib
 
 class ClassificationMap:
 
@@ -21,6 +22,26 @@ class ClassificationMap:
         self.layers = [None]*len(self.labels)
 
         self.make_map()
+
+    '''
+        Overlay the classification map onto the image
+
+        Params: 
+            .png image, the Image that is currently being used on the gui for display
+    '''
+    def overlay(self, image):
+
+        #read in the image we use to display the image in the gui
+        img = matplotlib.image.imread(image)
+
+        #Add the displayed image to a plot
+        matplotlib.pyplot.imshow(img)
+
+        #for each layer see if it needs to be overlayed
+        for i in range(len(layers)):
+            
+            if(self.layers[i].is_visible):
+                
 
     '''
         Produces the layered classification map
