@@ -471,6 +471,7 @@ class GUI:
 
 def main():
     root = tk.Tk()
+    root.attributes('-zoomed', True)
     GUI(root)
     root.mainloop()
 
