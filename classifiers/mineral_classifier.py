@@ -3,7 +3,7 @@ import math
 import numpy
 import scipy.special
 import scipy.linalg
-from scipy.signal import medfilt
+from scipy.ndimage.filters import median_filter
 import time
 import os
 
@@ -182,21 +182,57 @@ class MineralClassfier:
         return neutral_image
 
     '''
-        Perform the median and prepare the input image for use
+        Perform the median filtering using the mirror algorithm 
+        at the edges and prepares the input image for use
         in the mineral classifier.
 
         Params: window_size, the size of the window to use
-        Returns: numpy.double[][], the filtered
+        Returns: numpy.double[][], the filtered image
     '''
-    def median_filtering(self, window_size):
-        #TODO: deal with edge cases that are calculated differently due to MATLAB using a truncate function
+    def median_filtering_mirror(self, window_size):
         filtered_image = self.neutral_image
-        IF1 = medfilt(self.neutral_image, kernel_size=[1, window_size])
+        IF1 = median_filter(self.neutral_image, size=[1, window_size], mode = "mirror")
         tmp = abs(IF1 - self.neutral_image)
         #MATLAB code used values from 1 to 248 here so I followed suit
-        indices = tmp > numpy.mean(numpy.mean(tmp[:,0:247], axis=1)) + 1.5*numpy.mean(numpy.std(tmp[:,0:247], axis=1))
+        indices = tmp > numpy.mean(numpy.mean(tmp[:,0:248], axis=1)) + 1.5*numpy.mean(numpy.std(tmp[:,0:248], axis=1))
         filtered_image[indices] = IF1[indices]
         
+        return filtered_image
+
+    '''
+        Perform the median filtering using the truncate algorithm 
+        at the edges and prepares the input image for use
+        in the mineral classifier.
+
+        Params: window_size, the size of the window to use
+        Returns: numpy.double[][], the filtered image
+    '''
+    def median_filtering_truncate(self, window_size):
+        #NOTE: This is likely very inefficient and represents a first attempt at duplicating the functionality of the truncate 
+        #command from MATLAB. It takes quite a while to run.
+        filtered_image = self.neutral_image
+
+        #Attempt to replicate truncate functionality without having access to a truncate command
+        left_temp_values = numpy.zeros([window_size // 2, self.image.columns * self.image.rows])
+        right_temp_values = numpy.zeros([window_size // 2, self.image.columns * self.image.rows])
+        for i in range(window_size // 2):
+            for k in range(self.image.columns * self.image.rows):
+                left_temp_values[i,k] = numpy.median(self.neutral_image[k, 0:i+window_size//2+1])
+                right_temp_values[i,k] = numpy.median(self.neutral_image[k, self.image.dimensions-(i+window_size//2+1):self.image.dimensions])
+
+        #Perform the actual median filtering
+        IF1 = median_filter(self.neutral_image, size=[1, window_size], mode = "constant")
+        #Reassign values close to the edge
+        for i in range(left_temp_values.shape[0]):
+            IF1[:,i] = left_temp_values[i]
+            IF1[:,self.image.dimensions-i-1] = right_temp_values[i]
+
+        #Code with functionality replicated from the MATLAB file
+        tmp = abs(IF1 - self.neutral_image)
+        #MATLAB code used values from 1 to 248 here so I followed suit
+        indices = tmp > numpy.mean(numpy.mean(tmp[:,0:248], axis=1)) + 1.5*numpy.mean(numpy.std(tmp[:,0:248], axis=1, ddof=1))
+        filtered_image[indices] = IF1[indices]
+    
         return filtered_image
 
     '''
