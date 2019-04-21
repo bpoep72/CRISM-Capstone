@@ -56,6 +56,29 @@ class MineralClassfier:
         self.mineral_classification_map = self.mineral_classification()
 
     '''
+        Runs the classifier when requested by the GUI
+
+        Params: ratioing_window_size, the size of the window to use for ratioing
+            M_highest_slogs, the number of slog values to use in the ratioing calculation
+            median_filter_window_size, the size of the window to use for median filtering
+            median_filtering_mode, a selector for the mode of median filtering to use
+    '''
+    def run(self, ratioing_window_size, M_highest_slogs, median_filter_window_size, median_filtering_mode):
+        self.ratioing_window_size = ratioing_window_size
+        self.M_highest_slogs = M_highest_slogs
+        self.median_filter_window_size = median_filter_window_size
+        self.median_filtering_mode = median_filtering_mirror
+
+        self.normalized_image = self.neutral_pixel_norm()
+        self.neutral_image = self.ratioing(self.M_highest_slogs, self.ratioing_window_size)
+        if (self.median_filtering_mode == 0):
+            self.median_image = self.median_filtering_mirror(self.median_filter_window_size)
+        elif (self.median_filter_window_size == 1):
+            self.median_image = self.median_filtering_truncate(self.median_filter_window_size)
+        
+        self.mineral_classification_map = self.mineral_classification()
+
+    '''
         Loads a model file set using the npzFileReader. These models are used in
         both classifiers.
 
