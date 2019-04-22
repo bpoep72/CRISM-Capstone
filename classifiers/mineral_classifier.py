@@ -439,6 +439,12 @@ class MineralClassfier:
             self.median_image = self.median_filtering_truncate(self.median_filter_window_size)
         self.mineral_classification()
 
+    '''
+        Update the mode that the median classifier is using to generate the filtered image.
+
+        Params:
+            mode, int: the mode that we want to select (look at gui.py, fill_params_tab for more info)
+    '''
     def update_median_filtering_mode(self, mode):
 
         self.median_filtering_mode = mode
