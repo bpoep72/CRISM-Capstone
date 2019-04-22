@@ -457,15 +457,16 @@ class GUI:
 
             # if the input was not a valid int
             except:
-                #TODO: Add input error message for user
                 messagebox.showerror("Error", "All values must be positive integers. The window sizes must be odd. The maximum number of slogs must be less than 50.")
-                print("Input Invalid")
 
         #if an image has not already been loaded
-        else:
-            #TODO: Error message about needing to load an image
+        else:     
             messagebox.showerror("Error", "An image has not been loaded")
-            pass
+
+    def update_median_filter_mode(self):
+
+        #self.classifier.median_filtering_mode = 
+        pass
         
     def documentation(self):
 
@@ -473,16 +474,27 @@ class GUI:
         webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/#how-to-use-the-application', new=2)
         
     def about(self):
-        # TODO: implementation
+        
         webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/blob/master/README.md#about', new=2)
 
         
 
 def main():
     root = tk.Tk()
-    root.attributes('-zoomed', True)
+    root.state('zoomed')
     GUI(root)
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+
+    import os
+    root = tk.Tk()
+
+    #maximize the window based on the os, 'nt' = windows
+    if(os.name == 'nt'):
+        root.state('zoomed')
+    else:
+        root.attributes('-zoomed', True)
+
+    GUI(root)
+    root.mainloop()
