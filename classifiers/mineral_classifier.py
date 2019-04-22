@@ -4,7 +4,6 @@ import numpy
 import scipy.special
 import scipy.linalg
 from scipy.ndimage.filters import median_filter
-import time
 import os
 
 if __package__ is '':
@@ -157,10 +156,6 @@ class MineralClassfier:
         clause_3 = y_ind > self.image.rows - 1 - ( 2 * window_size )
         clause_4 = y_ind < self.image.rows - 1
 
-        t = time.time()
-
-        print(t)
-
         for i in range(self.image.rows * self.image.columns):
 
             #upper edge of image
@@ -201,9 +196,6 @@ class MineralClassfier:
                 ppiind = numpy.argpartition(ppi, -highest_slogs, axis=0)[-highest_slogs:]
                 neutral_image[i,:] = numpy.divide(self.image.get_pixel_vector(y_ind[i], x_ind[i]), numpy.mean(IFi[ppiind], axis=0) )
 
-        elapsed = time.time() - t
-        print(elapsed)
-        
         return neutral_image
 
     '''
