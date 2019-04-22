@@ -43,6 +43,7 @@ class GUI:
         self.median_filter_window_size = 17
         self.highest_slogs = 5
         self.ratioing_window_size = 25
+        self.classification_map = None
         
         # initialize root of GUI
         self.root = root
@@ -520,7 +521,7 @@ class GUI:
     def update_median_filter_mode(self):
 
         #if an image and a classifier are already made
-        if(self.image_name != 'placeholder.gif'):
+        if(self.image_name != 'placeholder.gif' and self.classification_map != None):
             self.classifier.update_median_filtering_mode(self.median_filtering_mode.get())
         
     '''
