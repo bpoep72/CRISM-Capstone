@@ -144,7 +144,10 @@ class GUI:
             for i in range(0, len(self.cl.layers)):
                 self.make_mineral(i)
 
-    # makes a label and radio button set for a single mineral
+    '''
+        For each mineral discovered by the classifier we need a widget to toggle the visibility
+        by use a radio button and a label to identify the mineral
+    '''
     def make_mineral(self, index):
         # creates the label and radio button
         tempMineral = tk.Label(self.frame, text=self.cl.layers[index].mineral_name)
@@ -184,14 +187,14 @@ class GUI:
     def fill_channel_tab(self):
 
         # create labels, text boxes, and button for channel switching
-        self.redLabel = tk.Label(self.channelTab, text="Red: ")
-        self.redLabel.grid(row=0,column=0)
+        redLabel = tk.Label(self.channelTab, text="Red: ")
+        redLabel.grid(row=0,column=0)
         
-        self.blueLabel = tk.Label(self.channelTab, text="Blue: ")
-        self.blueLabel.grid(row=1,column=0)
+        blueLabel = tk.Label(self.channelTab, text="Blue: ")
+        blueLabel.grid(row=1,column=0)
         
-        self.greenLabel = tk.Label(self.channelTab, text="Green: ")
-        self.greenLabel.grid(row=2,column=0)
+        greenLabel = tk.Label(self.channelTab, text="Green: ")
+        greenLabel.grid(row=2,column=0)
         
         self.redEntry = tk.Entry(self.channelTab)
         self.redEntry.insert(0, self.red)
@@ -210,14 +213,14 @@ class GUI:
 
     def fill_params_tab(self):
         # create labels, text boxes, and button for parameters
-        self.medianLabel = tk.Label(self.paramTab, text="Median Filtering Window Size")
-        self.medianLabel.grid(row=0, column=0)
+        medianLabel = tk.Label(self.paramTab, text="Median Filtering Window Size")
+        medianLabel.grid(row=0, column=0)
         
-        self.ratioLabel = tk.Label(self.paramTab, text="Ratio Window Size")
-        self.ratioLabel.grid(row=1, column=0)
+        ratioLabel = tk.Label(self.paramTab, text="Ratio Window Size")
+        ratioLabel.grid(row=1, column=0)
         
-        self.slogsLabel = tk.Label(self.paramTab, text="Number of Highest Slogs")
-        self.slogsLabel.grid(row=2, column=0)
+        slogsLabel = tk.Label(self.paramTab, text="Number of Highest Slogs")
+        slogsLabel.grid(row=2, column=0)
         
         self.medianEntry = tk.Entry(self.paramTab)
         self.medianEntry.insert(0, self.median_filter_window_size)
@@ -231,16 +234,23 @@ class GUI:
         self.slogsEntry.insert(0, self.highest_slogs)
         self.slogsEntry.grid(row=2, column=1)
 
+        label = tk.Label(self.paramTab, text="Median Filtering Mode:")
+        label.grid(row=3, column=0)
+
         modes = [('Mirror', 0),
                  ('Truncate', 1),
                 ]
 
+        #populate with radio buttons
         for i in range(len(modes)):
             b = tk.Radiobutton(self.paramTab, text=modes[i][0], value=modes[i][1])
-            b.grid(rowspan=2, row=(3 + i) )
+            #the default
+            if(i == 0):
+                b.select()
+            b.grid(columnspan=2, row=(4 + i) )
         
         self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
-        self.paramUpdate.grid(row=3 + len(modes) + 2, rowspan=2)
+        self.paramUpdate.grid(row=(4 + len(modes)) + 2, columnspan=3)
 
 
     '''
@@ -414,9 +424,6 @@ class GUI:
         matplotlib.image.imsave(fileName, img)
 
     def updateParam(self):
-        # TODO: implementation
-        print("Parameters Updated")
-
         #if an image has been loaded already
         if(self.image != 'placeholder.gif'):
             try:
@@ -463,10 +470,16 @@ class GUI:
         else:     
             messagebox.showerror("Error", "An image has not been loaded")
 
-    def update_median_filter_mode(self):
+    '''
+        Method called by reselection of the mode under the parameters tab of the GUI specific
+        to the mode radio button.
 
-        #self.classifier.median_filtering_mode = 
-        pass
+        Params:
+            mode, int the mode that we want to switch to
+    '''
+    def update_median_filter_mode(self, mode):
+
+        self.classifier.update_median_filtering_mode(mode)
         
     def documentation(self):
 
@@ -476,15 +489,7 @@ class GUI:
     def about(self):
         
         webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/blob/master/README.md#about', new=2)
-
         
-
-def main():
-    root = tk.Tk()
-    root.state('zoomed')
-    GUI(root)
-    root.mainloop()
-
 if __name__ == "__main__":
 
     import os
