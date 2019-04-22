@@ -148,7 +148,8 @@ class GUI:
                 self.make_mineral(i)
 
         else:
-            error = tk.Label(text="Classification has not yet run.")
+            error = tk.Label(self.classifierTab, text="Classification has not yet run.")
+            error.grid(row=0, column=0)
 
     '''
         Run the classifier and update the classifier tab
