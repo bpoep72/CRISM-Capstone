@@ -230,9 +230,18 @@ class GUI:
         self.slogsEntry = tk.Entry(self.paramTab)
         self.slogsEntry.insert(0, self.highest_slogs)
         self.slogsEntry.grid(row=2, column=1)
+
+        modes = [('Mirror', 0),
+                 ('Truncate', 1),
+                ]
+
+        for i in range(len(modes)):
+            b = tk.Radiobutton(self.paramTab, text=modes[i][0], value=modes[i][1])
+            b.grid(rowspan=2, row=(3 + i) )
         
         self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
-        self.paramUpdate.grid(row=3, column=1)
+        self.paramUpdate.grid(row=3 + len(modes) + 2, rowspan=2)
+
 
     '''
         Get the Image that was clicked when it is clicked inside the tree and open the image
