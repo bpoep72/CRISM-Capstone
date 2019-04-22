@@ -67,7 +67,7 @@ class MineralClassfier:
         self.ratioing_window_size = ratioing_window_size
         self.M_highest_slogs = M_highest_slogs
         self.median_filter_window_size = median_filter_window_size
-        self.median_filtering_mode = median_filtering_mirror
+        self.median_filtering_mode = median_filtering_mode
 
         self.normalized_image = self.neutral_pixel_norm()
         self.neutral_image = self.ratioing(self.M_highest_slogs, self.ratioing_window_size)
