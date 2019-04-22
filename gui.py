@@ -158,9 +158,9 @@ class GUI:
         tempMineral = tk.Label(self.frame, text=self.cl.layers[index].mineral_name)
         tempMineral.grid(row=index*3, column=0, rowspan=2)
         tempMineralButton = tk.IntVar()
-        tempYes = tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1, command=self.update_classifier)
+        tempYes = tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1, command=self.update_classification_map)
         tempYes.grid(row=index*3, column=1)
-        tempNo = tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0, command=self.update_classifier)
+        tempNo = tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0, command=self.update_classification_map)
         tempNo.grid(row=index*3+1, column=1)
         
         # blank label for spacing
@@ -174,7 +174,7 @@ class GUI:
     def on_frame_configure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         
-    def update_classifier(self):
+    def update_classification_map(self):
         pass
 
     def fill_menu_bar(self):
