@@ -122,7 +122,7 @@ class GUI:
 
     def fill_classifier_tab(self):
         
-        self.startClassifierButton = tk.Button(self.classifierTab, text="Start Classification")
+        self.startClassifierButton = tk.Button(self.classifierTab, text="Start Classification", command=self.run_classification)
         self.startClassifierButton.pack(side="top", fill="x")
 
         if(self.image_name != 'placeholder.gif'):
@@ -148,6 +148,14 @@ class GUI:
             
             for i in range(0, len(self.cl.layers)):
                 self.make_mineral(i)
+
+    '''
+        Run the classifier and update the classifier tab
+    '''
+    def run_classification(self):
+
+        self.classifier.run(self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode)
+
 
     '''
         For each mineral discovered by the classifier we need a widget to toggle the visibility
@@ -264,7 +272,6 @@ class GUI:
         
         self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
         self.paramUpdate.grid(row=(4 + len(modes)) + 2, columnspan=3)
-
 
     '''
         Get the Image that was clicked when it is clicked inside the tree and open the image
