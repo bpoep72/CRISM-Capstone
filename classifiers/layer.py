@@ -9,7 +9,7 @@ import numpy
 
 class Layer:
 
-    def __init__(self, prediction_matrix, label, color):
+    def __init__(self, prediction_matrix, label):
 
         #the boolean matrix that represents the layer
         self.prediction_matrix = prediction_matrix
@@ -24,7 +24,7 @@ class Layer:
         self.occurences = numpy.sum(self.prediction_matrix == 1)
         
         #the color assigned to is layer
-        self.color = color
+        self.color = None
 
         #whether the layer is currerently expected to be visible or not
         self.is_visible = False
