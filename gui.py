@@ -438,6 +438,10 @@ class GUI:
         #save it out using the name and extension we were given by asksaveasfilename
         matplotlib.image.imsave(fileName, img)
 
+    '''
+        Update the classifier parameters then reperform all neccasary tasks to get the
+        updated map and then display it
+    '''
     def updateParam(self):
         #if an image has been loaded already
         if(self.image_name != 'placeholder.gif'):
@@ -498,11 +502,17 @@ class GUI:
         if(self.image_name != 'placeholder.gif'):
             self.classifier.update_median_filtering_mode(self.median_filtering_mode.get())
         
+    '''
+        Link to the how to use page
+    '''
     def documentation(self):
 
         #open the git page in a new browser tab if possible
         webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/#how-to-use-the-application', new=2)
-        
+    
+    '''
+        Link to the how about us page
+    '''
     def about(self):
         
         webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/blob/master/README.md#about', new=2)
