@@ -475,12 +475,13 @@ def main():
 if __name__ == "__main__":
 
     import os
-
     root = tk.Tk()
+
     #maximize the window based on the os, 'nt' = windows
     if(os.name == 'nt'):
         root.state('zoomed')
     else:
         root.attributes('-zoomed', True)
+        
     GUI(root)
     root.mainloop()
