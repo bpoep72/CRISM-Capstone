@@ -20,6 +20,7 @@ import matplotlib
 
 from classifiers.imagereader import ImageReader
 from classifiers.classificationmap import ClassificationMap
+from classifiers.mineral_classifier import MineralClassfier
 
 # default channels for hyperspectral image (usually 233, 78, 13)
 RED_BASE = 0
@@ -34,8 +35,9 @@ class GUI:
         self.green = GREEN_BASE
 
         #placeholders for the backend variables
+        self.median_filtering_mode = None
         self.image_reader = ImageReader("")
-        self.classifier = None
+        self.classifier = MineralClassfier(None, 0)
         self.image_name = 'placeholder.gif'
         self.image = None
         self.median_filter_window_size = 17
@@ -106,6 +108,7 @@ class GUI:
 
     # recursively fills in the file directory
     def process_directory(self, parent, path):
+
         for p in os.listdir(path):
             abspath = os.path.join(path, p)
 
@@ -118,9 +121,11 @@ class GUI:
                 self.tree.insert(parent, 'end', text=p, open=False)
 
     def fill_classifier_tab(self):
+        
+        self.startClassifierButton = tk.Button(self.classifierTab, text="Start Classification")
+        self.startClassifierButton.pack(side="top", fill="x")
+
         if(self.image_name != 'placeholder.gif'):
-            self.startClassifierButton = tk.Button(self.classifierTab, text="Start Classifier")
-            self.startClassifierButton.pack(side="top", fill="x")
             
             self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#F0F0F0")
             self.frame = tk.Frame(self.canvas)
@@ -241,12 +246,20 @@ class GUI:
                  ('Truncate', 1),
                 ]
 
+        self.median_filtering_mode = tk.IntVar(self.paramTab)
+
         #populate with radio buttons
         for i in range(len(modes)):
-            b = tk.Radiobutton(self.paramTab, text=modes[i][0], value=modes[i][1])
-            #the default
+            b = tk.Radiobutton( self.paramTab, 
+                                text=modes[i][0], 
+                                value=modes[i][1],
+                                variable=self.median_filtering_mode, 
+                                command=self.update_median_filter_mode
+                                )
+            #set the first button as the default
             if(i == 0):
                 b.select()
+
             b.grid(columnspan=2, row=(4 + i) )
         
         self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
@@ -318,8 +331,7 @@ class GUI:
         self.greenEntry.insert(0, self.green)
         
     '''
-        Update the color attributes based in the input in the fields under the
-        Channel Display tab
+        Update the bands of the image that is currently displayed
     '''
     def updateColor(self):
 
@@ -354,7 +366,7 @@ class GUI:
             messagebox.showerror("Error", "Valid range for color channels is between 0 and 349")
 
     '''
-        Update the display of the image based on the 
+        Update the image that is currently displayed
     '''
     def updateImage(self):
 
@@ -374,6 +386,9 @@ class GUI:
         self.photo = tk.PhotoImage(file=path_to_image)
         self.display.image = self.photo
         self.display.configure(image=self.display.image)
+
+        #update the classifier to use the new image
+        self.classifier = MineralClassfier(self.image_reader.get_raw_image, self.median_filtering_mode)
 
     '''
         Open a file using a file dialog. Record the results then do 
@@ -425,7 +440,7 @@ class GUI:
 
     def updateParam(self):
         #if an image has been loaded already
-        if(self.image != 'placeholder.gif'):
+        if(self.image_name != 'placeholder.gif'):
             try:
                 #we only want to recalculate anything on the backend if anything changes that would impact the output
 
@@ -477,9 +492,13 @@ class GUI:
         Params:
             mode, int the mode that we want to switch to
     '''
-    def update_median_filter_mode(self, mode):
+    def update_median_filter_mode(self):
 
-        self.classifier.update_median_filtering_mode(mode)
+        print(self.median_filtering_mode.get())
+
+        #if an image and a classifier are already made
+        if(self.image_name != 'placeholder.gif'):
+            self.classifier.update_median_filtering_mode(self.median_filtering_mode)
         
     def documentation(self):
 
@@ -489,7 +508,7 @@ class GUI:
     def about(self):
         
         webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/blob/master/README.md#about', new=2)
-        
+
 if __name__ == "__main__":
 
     import os
