@@ -25,8 +25,14 @@ else:
 
 class ClassificationMap:
 
-    def __init__(self, predicted_labels, original_image_path):
+    #expects a prediction matrix of labels and a CRISMImage
+    def __init__(self, predicted_labels, original_image):
 
+        '''
+            finding a method to calculate these in a way that was distinct enough was extremely hard
+            we hard code these because even if a method like that existed it would be computationally
+            intensive
+        '''
         self.distinct_colors = [
         "#FFFF00", "#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059", "#7ED379",
         "#FFDBE5", "#7A4900", "#0000A6", "#63FFAC", "#B79762", "#004D43", "#8FB0FF", "#997D87",
@@ -40,7 +46,7 @@ class ClassificationMap:
         "#34362D", "#B4A8BD", "#00A6AA", "#452C2C", "#636375", "#A3C8C9", "#FF913F", "#938A81",
         "#575329", "#00FECF", "#B05B6F", "#8CD0FF", "#3B9700", "#04F757", "#C8A1A1", "#1E6E00",
         "#7900D7", "#A77500", "#6367A9", "#A05837", "#6B002C", "#772600", "#D790FF", "#9B9700",
-        "#549E79", "#201625", "#72418F", "#BC23FF", "#99ADC0", "#3A2465", "#922329", "#012C58"
+        "#549E79", "#201625", "#72418F", "#BC23FF", "#99ADC0", "#3A2465", "#922329", "#012C58",
         "#5B4534", "#FDE8DC", "#404E55", "#0089A3", "#CB7E98", "#A4E804", "#324E72", "#6A3A4C",
         "#83AB58", "#001C1E", "#D1F7CE", "#004B28", "#C8D0F6", "#A3A489", "#806C66", "#222800",
         "#BF5650", "#E83000", "#66796D", "#DA007C", "#FF1A59", "#8ADBB4", "#1E0200", "#5B4E51",
@@ -51,11 +57,10 @@ class ClassificationMap:
         self.predictions = predicted_labels
 
         #the image without any overlay
-        self.original_image = None
-        self.fetch_image(original_image_path)
+        self.original_image = original_image
 
         #what we currently believe the display of the 
-        self.current_view = self.original_image
+        self.current_view = self.original_image.raw_image
 
         #the unique predicted labels int[]
         self.labels = numpy.unique(self.predictions)
@@ -64,18 +69,6 @@ class ClassificationMap:
         self.layers = [None]*len(self.labels)
 
         self.make_map()
-
-
-    '''
-        Fetches the original image so that it is perserved
-
-        Params: str, the path to the original image
-        Returns: numpy[][][4] array, the original image as an array
-    '''
-    def fetch_image(self, path):
-
-        self.original_image = matplotlib.pyplot.imread(path)
-        self.current_view = self.original_image
 
     '''
         Overlay the classification map onto the image
@@ -87,7 +80,10 @@ class ClassificationMap:
     '''
     def overlay(self):
 
-        self.current_view = self.original_image * 255
+        self.current_view = numpy.zeros((self.original_image.rows, self.original_image.columns, 4))
+        self.current_view = self.current_view.astype(numpy.uint8)
+
+        visible_layers = 0
 
         #for each layer generate an image matrix for that layer
         for i in range(len(self.layers)):
@@ -95,25 +91,26 @@ class ClassificationMap:
             #only make the layer if it is currently visible
             if(self.layers[i].is_visible):
 
+                visible_layers += 1
+
+                self.layers[i].color = self.get_color(visible_layers)
+
                 #we need to generate the image we want to blend
                 image = numpy.zeros((self.predictions.shape[0], self.predictions.shape[1], 4))
 
                 #get the bool prediction matrix for the layer we are looking at 
                 prediction_matrix = self.layers[i].prediction_matrix
 
-                #set the rgb values
+                #set the rgba values
                 image[:, :, 0] = prediction_matrix * self.layers[i].color[0]
                 image[:, :, 1] = prediction_matrix * self.layers[i].color[1]
                 image[:, :, 2] = prediction_matrix * self.layers[i].color[2]
-
-                #zero out the places in the image where we are about to add the layer
-                self.current_view[:, :, 0] = numpy.multiply(self.current_view[:, :, 0], numpy.invert(prediction_matrix))
-                self.current_view[:, :, 1] = numpy.multiply(self.current_view[:, :, 1], numpy.invert(prediction_matrix))
-                self.current_view[:, :, 2] = numpy.multiply(self.current_view[:, :, 2], numpy.invert(prediction_matrix))
+                image[:, :, 3] = prediction_matrix * 255
+ 
+                image = image.astype(numpy.uint8)
 
                 #add the layer
                 self.current_view = numpy.add(self.current_view, image)
-                self.current_view = self.current_view.astype(int)
 
         return self.current_view
 
@@ -130,9 +127,8 @@ class ClassificationMap:
 
             layer = self.predictions == self.labels[label]
             label_num = self.labels[label]
-            color = self.get_color(label)
 
-            self.layers[label] = Layer(layer, label_num, color)
+            self.layers[label] = Layer(layer, label_num)
 
     '''
         Produces evenly spaced colors for use when displaying the individual layers
@@ -148,7 +144,7 @@ class ClassificationMap:
 
         hex_value = self.distinct_colors[number]
 
-        #remove the Ox
+        #remove the #
         hex_value = hex_value.split('#')[1]
 
         #pad with 0's if needed
@@ -199,8 +195,12 @@ if __name__ == "__main__":
     path = os.path.split(path)[0]
     path = os.path.join(path, 'display.png')
 
-    classification_map = ClassificationMap(test_mat, path)
-    classification_map.make_random_map(480, 320, 1)
+    classification_map = ClassificationMap(test_mat, img)
+    classification_map.make_random_map(480, 320, 25)
+
+    classification_map.layers[2].is_visible = True
+    classification_map.layers[0].is_visible = True
+    classification_map.layers[1].is_visible = True
 
     classification_map.overlay()
 
