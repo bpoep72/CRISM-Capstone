@@ -11,7 +11,7 @@ Include installation instructions
 import os
 import numpy as numpy
 import tkinter as tk
-from tkinter import filedialog, ttk
+from tkinter import filedialog, ttk, messagebox
 import spectral.io.envi as envi
 from PIL import Image, ImageTk
 
@@ -20,6 +20,7 @@ import matplotlib
 
 from classifiers.imagereader import ImageReader
 from classifiers.classificationmap import ClassificationMap
+from classifiers.mineral_classifier import MineralClassfier
 
 # default channels for hyperspectral image (usually 233, 78, 13)
 RED_BASE = 0
@@ -34,20 +35,19 @@ class GUI:
         self.green = GREEN_BASE
 
         #placeholders for the backend variables
+        self.median_filtering_mode = None
         self.image_reader = ImageReader("")
-        self.classifier = None
+        self.classifier = MineralClassfier(None, 0)
         self.image_name = 'placeholder.gif'
         self.image = None
         self.median_filter_window_size = 17
         self.highest_slogs = 5
         self.ratioing_window_size = 25
+        self.classification_map = None
         
         # initialize root of GUI
         self.root = root
         root.title("CRISM Hyperspectral Image Display")
-        
-        # maximize window
-        self.root.wm_state("zoomed")
         
         # create menubar and menu options
         self.menubar = tk.Menu(root)
@@ -100,58 +100,88 @@ class GUI:
         # create frame for parameters
         self.paramTab = tk.Frame(root)
         self.fill_params_tab()
-        self.tabs.add(self.paramTab, text="Parameters")
+        self.tabs.add(self.paramTab, text="Classification")
 
         #classification tab
         self.classifierTab = tk.Frame(root)
         self.fill_classifier_tab()
-        self.tabs.add(self.classifierTab, text="Classification")
+        self.tabs.add(self.classifierTab, text="Overlay")
 
     # recursively fills in the file directory
     def process_directory(self, parent, path):
+
         for p in os.listdir(path):
             abspath = os.path.join(path, p)
 
-            #leave out file headers to eliminate redundancy
-            is_header = bool(len(abspath.split('.hdr')) - 1)
+            #determine if a file is .img
+            split_path = abspath.split('.')
+            is_img = bool(split_path[-1] == 'img')
 
             #also leave out directories for now as they are too complicated to add
-            if(not is_header and not os.path.isdir(abspath)):
+            if(is_img and not os.path.isdir(abspath)):
                 self.tree.insert(parent, 'end', text=p, open=False)
 
     def fill_classifier_tab(self):
-        self.startClassifierButton = tk.Button(self.classifierTab, text="Start Classifier")
-        self.startClassifierButton.pack(side="top", fill="x")
-        
-        self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#F0F0F0")
-        self.frame = tk.Frame(self.canvas)
-        self.vsb = tk.Scrollbar(self.classifierTab, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.vsb.set)
-        
-        self.vsb.pack(side="right", fill="y")
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.canvas.create_window((2,12), window=self.frame, anchor="nw", tags="self.frame")
-        self.frame.bind("<Configure>", self.on_frame_configure)
-        
-        test_mat = numpy.random.rand(1)
-        self.cl = ClassificationMap(test_mat)
-        self.cl.make_random_map(0,0,3)
-        
-        self.mineralArray = []
-        self.mineralButtonArray = []
-        
-        for i in range(0, len(self.cl.layers)):
-            self.make_mineral(i)
 
-    # makes a label and radio button set for a single mineral
+        if(self.image_name != 'placeholder.gif'):
+            
+            self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#F0F0F0")
+            self.frame = tk.Frame(self.canvas)
+            self.vsb = tk.Scrollbar(self.classifierTab, orient="vertical", command=self.canvas.yview)
+            self.canvas.configure(yscrollcommand=self.vsb.set)
+            
+            self.vsb.pack(side="right", fill="y")
+            self.canvas.pack(side="left", fill="both", expand=True)
+            self.canvas.create_window((2,12), window=self.frame, anchor="nw", tags="self.frame")
+            self.frame.bind("<Configure>", self.on_frame_configure)
+            
+            test_mat = numpy.random.rand(1)
+
+            path_to_image = os.path.dirname(__file__)
+            path_to_image = os.path.join(path_to_image, 'display.png')
+            self.classification_map = ClassificationMap(test_mat, path_to_image)
+            
+            self.mineralArray = [] #TODO: ?
+            self.mineralButtonArray = [] #TODO: ?
+            
+            for i in range(0, len(self.classification_map.layers)):
+                self.make_mineral(i)
+
+        else:
+            error = tk.Label(self.classifierTab, text="Classification has not yet run.")
+            error.grid(row=0, column=0)
+
+    '''
+        Run the classifier and update the classifier tab
+    '''
+    def run_classification(self):
+
+        if(self.image_name != 'placeholder.gif'):
+            self.classifier.run(self.image_reader.get_raw_image(), self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode.get())
+            self.classification_map = self.classifier.mineral_classification_map
+
+            #clear the old classification tab
+            for widget in self.classifierTab.winfo_children():
+                widget.destroy()
+
+            #rebuild the classification tab with the new updates
+            self.fill_classifier_tab()
+        else:
+            messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
+
+    '''
+        For each mineral discovered by the classifier we need a widget to toggle the visibility
+        by use a radio button and a label to identify the mineral
+    '''
     def make_mineral(self, index):
         # creates the label and radio button
-        tempMineral = tk.Label(self.frame, text=self.cl.layers[index].mineral_name)
+        tempMineral = tk.Label(self.frame, text=self.classification_map.layers[index].mineral_name)
         tempMineral.grid(row=index*3, column=0, rowspan=2)
         tempMineralButton = tk.IntVar()
-        tempYes = tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1, command=self.update_classifier)
+        tempYes = tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1, command=self.update_overlay)
         tempYes.grid(row=index*3, column=1)
-        tempNo = tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0, command=self.update_classifier)
+        tempNo = tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0, command=self.update_overlay)
+        tempNo.select()
         tempNo.grid(row=index*3+1, column=1)
         
         # blank label for spacing
@@ -164,9 +194,15 @@ class GUI:
     # resets scroll region to encompass entire frame
     def on_frame_configure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+    
+    '''
+        Update both the image with the overlay and also the classification tab as it
+        was dependent on the 
+    '''
+    def update_overlay(self):
         
-    def update_classifier(self):
         pass
+        
 
     def fill_menu_bar(self):
 
@@ -183,14 +219,14 @@ class GUI:
     def fill_channel_tab(self):
 
         # create labels, text boxes, and button for channel switching
-        self.redLabel = tk.Label(self.channelTab, text="Red: ")
-        self.redLabel.grid(row=0,column=0)
+        redLabel = tk.Label(self.channelTab, text="Red: ")
+        redLabel.grid(row=0,column=0)
         
-        self.blueLabel = tk.Label(self.channelTab, text="Blue: ")
-        self.blueLabel.grid(row=1,column=0)
+        blueLabel = tk.Label(self.channelTab, text="Blue: ")
+        blueLabel.grid(row=1,column=0)
         
-        self.greenLabel = tk.Label(self.channelTab, text="Green: ")
-        self.greenLabel.grid(row=2,column=0)
+        greenLabel = tk.Label(self.channelTab, text="Green: ")
+        greenLabel.grid(row=2,column=0)
         
         self.redEntry = tk.Entry(self.channelTab)
         self.redEntry.insert(0, self.red)
@@ -209,14 +245,14 @@ class GUI:
 
     def fill_params_tab(self):
         # create labels, text boxes, and button for parameters
-        self.medianLabel = tk.Label(self.paramTab, text="Median Filtering Window Size")
-        self.medianLabel.grid(row=0, column=0)
+        medianLabel = tk.Label(self.paramTab, text="Median Filtering Window Size")
+        medianLabel.grid(row=0, column=0)
         
-        self.ratioLabel = tk.Label(self.paramTab, text="Ratio Window Size")
-        self.ratioLabel.grid(row=1, column=0)
+        ratioLabel = tk.Label(self.paramTab, text="Ratio Window Size")
+        ratioLabel.grid(row=1, column=0)
         
-        self.slogsLabel = tk.Label(self.paramTab, text="Number of Highest Slogs")
-        self.slogsLabel.grid(row=2, column=0)
+        slogsLabel = tk.Label(self.paramTab, text="Number of Highest Slogs")
+        slogsLabel.grid(row=2, column=0)
         
         self.medianEntry = tk.Entry(self.paramTab)
         self.medianEntry.insert(0, self.median_filter_window_size)
@@ -229,9 +265,32 @@ class GUI:
         self.slogsEntry = tk.Entry(self.paramTab)
         self.slogsEntry.insert(0, self.highest_slogs)
         self.slogsEntry.grid(row=2, column=1)
+
+        label = tk.Label(self.paramTab, text="Median Filtering Mode:")
+        label.grid(row=3, column=0)
+
+        modes = [('Mirror', 0),
+                 ('Truncate', 1),
+                ]
+
+        self.median_filtering_mode = tk.IntVar(self.paramTab)
+
+        #populate with radio buttons
+        for i in range(len(modes)):
+            b = tk.Radiobutton( self.paramTab, 
+                                text=modes[i][0], 
+                                value=modes[i][1],
+                                variable=self.median_filtering_mode, 
+                                command=self.update_median_filter_mode
+                                )
+            #set the first button as the default
+            if(i == 0):
+                b.select()
+
+            b.grid(columnspan=2, row=(4 + i) )
         
-        self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
-        self.paramUpdate.grid(row=3, column=1)
+        self.paramUpdate = tk.Button(self.paramTab, text="Run Classification", command=self.run_classification)
+        self.paramUpdate.grid(row=(4 + len(modes)) + 2, columnspan=3)
 
     '''
         Get the Image that was clicked when it is clicked inside the tree and open the image
@@ -247,6 +306,11 @@ class GUI:
         clicked = clicked[1:]
         #cast to int
         clicked = int(clicked)
+
+        #0 is the directory header no need to go further
+        if(clicked == 0):
+            return 
+
         clicked -= 2
 
         #the parent directory of this file
@@ -260,7 +324,8 @@ class GUI:
         #remove the entries in that are not .img files
         for file_name in directory_list:
             #those conditions return true if the extension is the given string otherwise 0
-            if(bool( len(file_name.split('.img'))-1 ) and not bool( len(file_name.split('.hdr'))-1 ) ):
+            split_name = file_name.split('.')
+            if(split_name[-1] == 'img'):
                 image_list.append(file_name)
 
         #if clicked is out of the expected bounds do nothing
@@ -297,13 +362,18 @@ class GUI:
         self.greenEntry.insert(0, self.green)
         
     '''
-        Update the color attributes based in the input in the fields under the
-        Channel Display tab
+        Update the bands of the image that is currently displayed
     '''
     def updateColor(self):
 
         try:
-            #attempt type coercion
+            r = int(self.redEntry.get())
+            g = int(self.greenEntry.get())
+            b = int(self.blueEntry.get())
+
+            max_band_number = len(self.image.bands)
+            assert r < max_band_number and g < max_band_number and b < max_band_number
+            assert r >= 0 and g >= 0 and b >= 0
             self.red = int(self.redEntry.get())
             self.blue = int(self.blueEntry.get())
             self.green = int(self.greenEntry.get())
@@ -321,12 +391,13 @@ class GUI:
                 self.display.image = self.photo
                 self.display.configure(image=self.display.image)
         #if coercion failed
-        except:
-            #TODO: Add input error message for user
-            print("Input Invalid: update Color")
+        except AttributeError:
+            messagebox.showerror("Error", "An image has not been loaded")
+        except AssertionError:
+            messagebox.showerror("Error", "Valid range for color channels is between 0 and 349")
 
     '''
-        Update the display of the image based on the 
+        Update the image that is currently displayed
     '''
     def updateImage(self):
 
@@ -347,6 +418,9 @@ class GUI:
         self.display.image = self.photo
         self.display.configure(image=self.display.image)
 
+        #update the classifier to use the new image
+        self.classifier = MineralClassfier(self.image_reader.get_raw_image(), self.median_filtering_mode)
+
     '''
         Open a file using a file dialog. Record the results then do 
         what is neccasary to display the image. We need the image to
@@ -354,25 +428,27 @@ class GUI:
         DIRECTORY
     '''
     def openFile(self):
+        try:
+            parent_path = os.path.dirname(os.path.abspath(__file__))
+            
+            image_path = tk.filedialog.askopenfilename(
+                    initialdir = os.path.join(parent_path, 'Images'),
+                    defaultextension = '.img',
+                    filetypes = [('Hyperspectral Image Files', '.img')],
+                    title = "Open Image File"
+                    )
 
-        parent_path = os.path.dirname(os.path.abspath(__file__))
-        
-        image_path = tk.filedialog.askopenfilename(
-                initialdir = os.path.join(parent_path, 'Images'),
-                defaultextension = '.img',
-                filetypes = [('Hyperspectral Image Files', '.img'), ('All Files', '.*')],
-                title = "Open Image File"
-                )
+            #the instruction above returns os dependant paths make them independent of os again
+            image_path = os.path.abspath(image_path)
+            #update the current image name
+            self.image_name = os.path.split(image_path)[1]
 
-        #the instruction above returns os dependant paths make them independent of os again
-        image_path = os.path.abspath(image_path)
-        #update the current image name
-        self.image_name = os.path.split(image_path)[1]
-
-        #Only update if the an image was selected
-        if(len(image_path) != 0):
-            self.image_path = image_path
-            self.updateImage()
+            #Only update if the an image was selected
+            if(len(image_path) != 0):
+                self.image_path = image_path
+                self.updateImage()
+        except:
+            messagebox.showerror("Error", "The header file could not be found. Make sure it is in the same directory as the image.")
     
     '''
         Save the current view of the image out to a place specfied by
@@ -383,9 +459,7 @@ class GUI:
         fileName = tk.filedialog.asksaveasfilename(
                 defaultextension = '.png',
                 filetypes = [('PNG file', '.png'),
-                             ('JPEG file', '.jpg'),
-                             ('GIF file', '.gif'),
-                             ('All Files', '.*')],
+                             ('JPEG file', '.jpg')],
                 title = "Save Image File As",
                 initialfile="image"
                 )
@@ -395,12 +469,13 @@ class GUI:
         #save it out using the name and extension we were given by asksaveasfilename
         matplotlib.image.imsave(fileName, img)
 
+    '''
+        Update the classifier parameters then reperform all neccasary tasks to get the
+        updated map and then display it
+    '''
     def updateParam(self):
-        # TODO: implementation
-        print("Parameters Updated")
-
         #if an image has been loaded already
-        if(self.image != 'placeholder.gif'):
+        if(self.image_name != 'placeholder.gif'):
             try:
                 #we only want to recalculate anything on the backend if anything changes that would impact the output
 
@@ -439,29 +514,50 @@ class GUI:
 
             # if the input was not a valid int
             except:
-                #TODO: Add input error message for user
-                print("Input Invalid")
+                messagebox.showerror("Error", "All values must be positive integers. The window sizes must be odd. The maximum number of slogs must be less than 50.")
 
         #if an image has not already been loaded
-        else:
-            #TODO: Error message about needing to load an image
-            pass
+        else:     
+            messagebox.showerror("Error", "An image has not been loaded")
+
+    '''
+        Method called by reselection of the mode under the parameters tab of the GUI specific
+        to the mode radio button.
+
+        Params:
+            mode, int the mode that we want to switch to
+    '''
+    def update_median_filter_mode(self):
+
+        #if an image and a classifier are already made
+        if(self.image_name != 'placeholder.gif' and self.classification_map != None):
+            self.classifier.update_median_filtering_mode(self.median_filtering_mode)
         
+    '''
+        Link to the how to use page
+    '''
     def documentation(self):
 
         #open the git page in a new browser tab if possible
         webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/#how-to-use-the-application', new=2)
-        
+    
+    '''
+        Link to the how about us page
+    '''
     def about(self):
-        # TODO: implementation
+        
         webbrowser.open('https://github.iu.edu/bmpoeppe/CRISMCapstonePython/blob/master/README.md#about', new=2)
 
-        
+if __name__ == "__main__":
 
-def main():
+    import os
     root = tk.Tk()
+
+    #maximize the window based on the os, 'nt' = windows
+    if(os.name == 'nt'):
+        root.state('zoomed')
+    else:
+        root.attributes('-zoomed', True)
+
     GUI(root)
     root.mainloop()
-
-if __name__ == "__main__":
-    main()
