@@ -64,13 +64,14 @@
   
 <h2>Possible features for the future</h2>
   <ul>
-    <li>progress bar</li>
-    <li>per pixel value information as a hover over on the image</li>
-    <li>per band information panel</li>
-    <li>optimized ratioing</li>
-    <li>save and load classification option</li>
-    <li>ability to have multiple images open at once</li>
-    <li>ability to see the model files in application</li>
+    <li>Progress bar. Currently while classification runs the application acts like it died. A progress bar would reassure the user it is still running.</li>
+    <li>Per pixel value information as a hover over on the image, the original values for that particular pixel before it was normalized for display could help catch errors in future development</li>
+    <li>Per band information panel, min, max, average</li>
+    <li>Optimized ratioing as it presently takes the second longest time of all methods</li>
+    <li>Save and load classification option, instead of having to rerun classification every execution</li>
+    <li>Ability to have multiple images open at once</li>
+    <li>Ability to see the model files in application, kind of like when you use variable explorer in matlab</li>
+    <li>A tab that shows current image data, like dimensions size, location</li>
   </ul>
 <h2>How to Use The Application</h2>
   <ul>

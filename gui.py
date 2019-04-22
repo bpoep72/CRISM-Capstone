@@ -135,14 +135,8 @@ class GUI:
             self.canvas.create_window((2,12), window=self.frame, anchor="nw", tags="self.frame")
             self.frame.bind("<Configure>", self.on_frame_configure)
             
-            test_mat = numpy.random.rand(1)
-
-            path_to_image = os.path.dirname(__file__)
-            path_to_image = os.path.join(path_to_image, 'display.png')
-            self.classification_map = ClassificationMap(test_mat, path_to_image)
-            
-            self.mineralArray = [] #TODO: ?
-            self.mineralButtonArray = [] #TODO: ?
+            self.mineralArray = []
+            self.mineralButtonArray = []
             
             for i in range(0, len(self.classification_map.layers)):
                 self.make_mineral(i)

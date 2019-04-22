@@ -294,8 +294,10 @@ class MineralClassfier:
         #call the classification method
         classifier_ouput = self.two_layer_gmm(reduced_image, model.Sig_s, model.mu_s, model.v_s, model.class_id)
 
+        prediction_matrix = numpy.reshape(classifier_ouput[0], (self.image.rows, self.image.columns, 1))
+
         #format the output
-        self.mineral_classification_map = ClassificationMap(classifier_ouput[0])
+        self.mineral_classification_map = ClassificationMap(prediction_matrix, self.image)
 
         return self.mineral_classification_map
 
