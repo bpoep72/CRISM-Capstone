@@ -62,9 +62,10 @@ class MineralClassfier:
             median_filter_window_size, the size of the window to use for median filtering
             median_filtering_mode, a selector for the mode of median filtering to use
     '''
-    def run(self, ratioing_window_size, M_highest_slogs, median_filter_window_size, median_filtering_mode):
+    def run(self, image, ratioing_window_size, M_highest_slogs, median_filter_window_size, median_filtering_mode):
         
         #set the attributes
+        self.image = image
         self.ratioing_window_size = ratioing_window_size
         self.M_highest_slogs = M_highest_slogs
         self.median_filter_window_size = median_filter_window_size
@@ -273,7 +274,7 @@ class MineralClassfier:
         reduced_image = numpy.squeeze(reduced_image)
 
         #normalize the image
-        #get the mins along each row then reshape to allow matrix multiplication to take place
+        #get the extrema along each row then reshape to allow matrix multiplication to take place
         reduced_image_mins = numpy.amin(reduced_image, axis=1)
         reduced_image_mins = numpy.reshape(reduced_image_mins, (reduced_image_mins.shape[0], 1))
 

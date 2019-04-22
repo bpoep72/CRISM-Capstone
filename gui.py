@@ -156,15 +156,18 @@ class GUI:
     '''
     def run_classification(self):
 
-        self.classifier.run(self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode)
-        self.classification_map = self.classifier.mineral_classification_map
+        if(self.image_name != 'placeholder.gif'):
+            self.classifier.run(self.image_reader.get_raw_image(), self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode.get())
+            self.classification_map = self.classifier.mineral_classification_map
 
-        #clear the old classification tab
-        for widget in self.classifierTab.winfo_children():
-            widget.destroy()
+            #clear the old classification tab
+            for widget in self.classifierTab.winfo_children():
+                widget.destroy()
 
-        #rebuild the classification tab with the new updates
-        self.fill_classifier_tab()
+            #rebuild the classification tab with the new updates
+            self.fill_classifier_tab()
+        else:
+            messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
 
     '''
         For each mineral discovered by the classifier we need a widget to toggle the visibility
@@ -303,6 +306,11 @@ class GUI:
         clicked = clicked[1:]
         #cast to int
         clicked = int(clicked)
+
+        #0 is the directory header no need to go further
+        if(clicked == 0):
+            return 
+
         clicked -= 2
 
         #the parent directory of this file
@@ -523,7 +531,7 @@ class GUI:
 
         #if an image and a classifier are already made
         if(self.image_name != 'placeholder.gif' and self.classification_map != None):
-            self.classifier.update_median_filtering_mode(self.median_filtering_mode.get())
+            self.classifier.update_median_filtering_mode(self.median_filtering_mode)
         
     '''
         Link to the how to use page
