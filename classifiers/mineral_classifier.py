@@ -57,7 +57,9 @@ class MineralClassfier:
     '''
         Runs the classifier when requested by the GUI
 
-        Params: ratioing_window_size, the size of the window to use for ratioing
+        Params:
+            image, a CRISMImage
+            ratioing_window_size, the size of the window to use for ratioing
             M_highest_slogs, the number of slog values to use in the ratioing calculation
             median_filter_window_size, the size of the window to use for median filtering
             median_filtering_mode, a selector for the mode of median filtering to use
