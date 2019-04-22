@@ -141,12 +141,12 @@ class GUI:
 
             path_to_image = os.path.dirname(__file__)
             path_to_image = os.path.join(path_to_image, 'display.png')
-            self.cl = ClassificationMap(test_mat, path_to_image)
+            self.classification_map = ClassificationMap(test_mat, path_to_image)
             
             self.mineralArray = [] #TODO: ?
             self.mineralButtonArray = [] #TODO: ?
             
-            for i in range(0, len(self.cl.layers)):
+            for i in range(0, len(self.classification_map.layers)):
                 self.make_mineral(i)
 
     '''
@@ -163,7 +163,7 @@ class GUI:
     '''
     def make_mineral(self, index):
         # creates the label and radio button
-        tempMineral = tk.Label(self.frame, text=self.cl.layers[index].mineral_name)
+        tempMineral = tk.Label(self.frame, text=self.classification_map.layers[index].mineral_name)
         tempMineral.grid(row=index*3, column=0, rowspan=2)
         tempMineralButton = tk.IntVar()
         tempYes = tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1, command=self.update_classification_map)
