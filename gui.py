@@ -100,12 +100,12 @@ class GUI:
         # create frame for parameters
         self.paramTab = tk.Frame(root)
         self.fill_params_tab()
-        self.tabs.add(self.paramTab, text="Parameters")
+        self.tabs.add(self.paramTab, text="Classification")
 
         #classification tab
         self.classifierTab = tk.Frame(root)
         self.fill_classifier_tab()
-        self.tabs.add(self.classifierTab, text="Classification")
+        self.tabs.add(self.classifierTab, text="Overlay")
 
     # recursively fills in the file directory
     def process_directory(self, parent, path):
@@ -122,9 +122,6 @@ class GUI:
                 self.tree.insert(parent, 'end', text=p, open=False)
 
     def fill_classifier_tab(self):
-        
-        self.startClassifierButton = tk.Button(self.classifierTab, text="Start Classification", command=self.run_classification)
-        self.startClassifierButton.pack(side="top", fill="x")
 
         if(self.image_name != 'placeholder.gif'):
             
@@ -149,6 +146,9 @@ class GUI:
             
             for i in range(0, len(self.classification_map.layers)):
                 self.make_mineral(i)
+
+        else:
+            error = tk.Label(text="Classification has not yet run.")
 
     '''
         Run the classifier and update the classifier tab
@@ -285,7 +285,7 @@ class GUI:
 
             b.grid(columnspan=2, row=(4 + i) )
         
-        self.paramUpdate = tk.Button(self.paramTab, text="Update", command=self.updateParam)
+        self.paramUpdate = tk.Button(self.paramTab, text="Run Classification", command=self.run_classification)
         self.paramUpdate.grid(row=(4 + len(modes)) + 2, columnspan=3)
 
     '''
