@@ -451,9 +451,13 @@ class GUI:
                 messagebox.showerror("Error", "All values must be positive integers. The window sizes must be odd. The maximum number of slogs must be less than 50.")
 
         #if an image has not already been loaded
-        else:
-            
+        else:     
             messagebox.showerror("Error", "An image has not been loaded")
+
+    def update_median_filter_mode(self):
+
+        #self.classifier.median_filtering_mode = 
+        pass
         
     def documentation(self):
 
@@ -482,6 +486,6 @@ if __name__ == "__main__":
         root.state('zoomed')
     else:
         root.attributes('-zoomed', True)
-        
+
     GUI(root)
     root.mainloop()
