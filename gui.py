@@ -155,7 +155,14 @@ class GUI:
     def run_classification(self):
 
         self.classifier.run(self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode)
+        self.classification_map = self.classifier.mineral_classification_map
 
+        #clear the old classification tab
+        for widget in self.classifierTab.winfo_children():
+            widget.destroy()
+
+        #rebuild the classification tab with the new updates
+        self.fill_classifier_tab()
 
     '''
         For each mineral discovered by the classifier we need a widget to toggle the visibility
@@ -166,9 +173,10 @@ class GUI:
         tempMineral = tk.Label(self.frame, text=self.classification_map.layers[index].mineral_name)
         tempMineral.grid(row=index*3, column=0, rowspan=2)
         tempMineralButton = tk.IntVar()
-        tempYes = tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1, command=self.update_classification_map)
+        tempYes = tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1, command=self.update_overlay)
         tempYes.grid(row=index*3, column=1)
-        tempNo = tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0, command=self.update_classification_map)
+        tempNo = tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0, command=self.update_overlay)
+        tempNo.select()
         tempNo.grid(row=index*3+1, column=1)
         
         # blank label for spacing
@@ -181,9 +189,15 @@ class GUI:
     # resets scroll region to encompass entire frame
     def on_frame_configure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+    
+    '''
+        Update both the image with the overlay and also the classification tab as it
+        was dependent on the 
+    '''
+    def update_overlay(self):
         
-    def update_classification_map(self):
         pass
+        
 
     def fill_menu_bar(self):
 
