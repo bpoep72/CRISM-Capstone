@@ -388,7 +388,7 @@ class GUI:
         self.display.configure(image=self.display.image)
 
         #update the classifier to use the new image
-        self.classifier = MineralClassfier(self.image_reader.get_raw_image, self.median_filtering_mode)
+        self.classifier = MineralClassfier(self.image_reader.get_raw_image(), self.median_filtering_mode)
 
     '''
         Open a file using a file dialog. Record the results then do 
@@ -494,11 +494,9 @@ class GUI:
     '''
     def update_median_filter_mode(self):
 
-        print(self.median_filtering_mode.get())
-
         #if an image and a classifier are already made
         if(self.image_name != 'placeholder.gif'):
-            self.classifier.update_median_filtering_mode(self.median_filtering_mode)
+            self.classifier.update_median_filtering_mode(self.median_filtering_mode.get())
         
     def documentation(self):
 
