@@ -79,7 +79,7 @@ class MineralClassfier:
 
         if (self.median_filtering_mode == 0):
             self.median_image = self.median_filtering_mirror(self.median_filter_window_size)
-        elif (self.median_filter_window_size == 1):
+        elif (self.median_filtering_mode == 1):
             self.median_image = self.median_filtering_truncate(self.median_filter_window_size)
         
         self.mineral_classification_map = self.mineral_classification()
