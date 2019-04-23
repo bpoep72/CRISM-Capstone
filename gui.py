@@ -121,30 +121,6 @@ class GUI:
             if(is_img and not os.path.isdir(abspath)):
                 self.tree.insert(parent, 'end', text=p, open=False)
 
-    def fill_classifier_tab(self):
-
-        if(self.image_name != 'placeholder.gif'):
-            
-            self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#F0F0F0")
-            self.frame = tk.Frame(self.canvas)
-            self.vsb = tk.Scrollbar(self.classifierTab, orient="vertical", command=self.canvas.yview)
-            self.canvas.configure(yscrollcommand=self.vsb.set)
-            
-            self.vsb.pack(side="right", fill="y")
-            self.canvas.pack(side="left", fill="both", expand=True)
-            self.canvas.create_window((2,12), window=self.frame, anchor="nw", tags="self.frame")
-            self.frame.bind("<Configure>", self.on_frame_configure)
-            
-            self.mineralArray = []
-            self.mineralButtonArray = []
-            
-            for i in range(0, len(self.classification_map.layers)):
-                self.make_mineral(i)
-
-        else:
-            error = tk.Label(self.classifierTab, text="Classification has not yet run.")
-            error.grid(row=0, column=0)
-
     '''
         Run the classifier and update the classifier tab
     '''
@@ -182,7 +158,6 @@ class GUI:
         tk.Label(self.frame, text="").grid(row=index*3+2, column=0, columnspan=2)
         
         # puts the items within the array
-        self.mineralArray.append(tempMineral)
         self.mineralButtonArray.append(tempMineralButton)
     
     # resets scroll region to encompass entire frame
@@ -194,9 +169,51 @@ class GUI:
         was dependent on the 
     '''
     def update_overlay(self):
+
+        visible = []
         
-        pass
-        
+        #get the visibility option of all buttons
+        for i in range(len(self.mineralButtonArray)):
+            visible.append(self.mineralButtonArray[i].get())
+
+        #set the visibility of all the layers based on the buttons
+        for i in range(len(visible)):
+            if(visible[i] == 1):
+                self.classification_map.layers[i].is_visible = True
+            else:
+                self.classification_map.layers[i].is_visible = False
+
+        overlay_mask = self.classification_map.overlay()
+
+        path = self.image.get_three_channel(self.red, self.green, self.blue)
+
+        original_image = matplotlib.pyplot.imread(path)
+
+        original_image = original_image * 255
+
+        mask = numpy.zeros((self.image.rows, self.image.columns, 4))
+
+        keep = numpy.invert(numpy.sum(overlay_mask, axis=2) > 0)
+
+        mask[:, :, 0] = keep
+        mask[:, :, 1] = keep
+        mask[:, :, 2] = keep
+        mask[:, :, 3] = True
+
+        #remove the pixels that will be replace from the original image
+        original_image = numpy.multiply(original_image, mask)
+
+        combined_image = original_image
+        combined_image[:, :, (0, 1, 2)] = numpy.add(original_image[:, :, (0, 1, 2)], overlay_mask[:, :, (0, 1, 2)])
+
+        combined_image = combined_image.astype(numpy.uint8)
+
+        matplotlib.pyplot.imsave('display', combined_image)
+
+        #render the image pointed to the the path_to_image
+        self.photo = tk.PhotoImage(file=path)
+        self.display.image = self.photo
+        self.display.configure(image=self.display.image)
 
     def fill_menu_bar(self):
 
@@ -215,24 +232,24 @@ class GUI:
         # create labels, text boxes, and button for channel switching
         redLabel = tk.Label(self.channelTab, text="Red: ")
         redLabel.grid(row=0,column=0)
+
+        greenLabel = tk.Label(self.channelTab, text="Green: ")
+        greenLabel.grid(row=1,column=0)
         
         blueLabel = tk.Label(self.channelTab, text="Blue: ")
-        blueLabel.grid(row=1,column=0)
-        
-        greenLabel = tk.Label(self.channelTab, text="Green: ")
-        greenLabel.grid(row=2,column=0)
+        blueLabel.grid(row=2,column=0)
         
         self.redEntry = tk.Entry(self.channelTab)
         self.redEntry.insert(0, self.red)
         self.redEntry.grid(row=0,column=1)
         
-        self.blueEntry = tk.Entry(self.channelTab)
-        self.blueEntry.insert(0, self.blue)
-        self.blueEntry.grid(row=1,column=1)
-        
         self.greenEntry = tk.Entry(self.channelTab)
         self.greenEntry.insert(0, self.green)
-        self.greenEntry.grid(row=2,column=1)
+        self.greenEntry.grid(row=1,column=1)
+
+        self.blueEntry = tk.Entry(self.channelTab)
+        self.blueEntry.insert(0, self.blue)
+        self.blueEntry.grid(row=2,column=1)
         
         self.colorUpdate = tk.Button(self.channelTab, text="Apply Channels", command=self.updateColor)
         self.colorUpdate.grid(row=3,column=1)
@@ -274,8 +291,7 @@ class GUI:
             b = tk.Radiobutton( self.paramTab, 
                                 text=modes[i][0], 
                                 value=modes[i][1],
-                                variable=self.median_filtering_mode, 
-                                command=self.update_median_filter_mode
+                                variable=self.median_filtering_mode,
                                 )
             #set the first button as the default
             if(i == 0):
@@ -285,6 +301,29 @@ class GUI:
         
         self.paramUpdate = tk.Button(self.paramTab, text="Run Classification", command=self.run_classification)
         self.paramUpdate.grid(row=(4 + len(modes)) + 2, columnspan=3)
+
+    def fill_classifier_tab(self):
+
+        if(self.classification_map != None):
+            
+            self.canvas = tk.Canvas(self.classifierTab, borderwidth=0, background="#F0F0F0")
+            self.frame = tk.Frame(self.canvas)
+            self.vsb = tk.Scrollbar(self.classifierTab, orient="vertical", command=self.canvas.yview)
+            self.canvas.configure(yscrollcommand=self.vsb.set)
+            
+            self.vsb.pack(side="right", fill="y")
+            self.canvas.pack(side="left", fill="both", expand=True)
+            self.canvas.create_window((2,12), window=self.frame, anchor="nw", tags="self.frame")
+            self.frame.bind("<Configure>", self.on_frame_configure)
+            
+            self.mineralButtonArray = []
+            
+            for i in range(0, len(self.classification_map.layers)):
+                self.make_mineral(i)
+
+        else:
+            error = tk.Label(self.classifierTab, text="Classification has not yet run.")
+            error.grid(row=0, column=0)
 
     '''
         Get the Image that was clicked when it is clicked inside the tree and open the image
@@ -342,8 +381,8 @@ class GUI:
 
         #set the class attributes to match the bands from the above method call
         self.red = bands[0]
-        self.blue = bands[1]
-        self.green = bands[2]
+        self.green = bands[1]
+        self.blue = bands[2]
 
         #update the tk.Entry fields
         self.redEntry.delete(0, tk.END)
@@ -378,12 +417,16 @@ class GUI:
                 self.image = self.image_reader.get_raw_image()
 
                 #have imagereader update the display.png, returning the path to the image
-                path_to_image = self.image.get_three_channel(self.red, self.blue, self.green)
+                path_to_image = self.image.get_three_channel(self.red, self.green, self.blue)
                 
                 #render the image pointed to the the path_to_image
                 self.photo = tk.PhotoImage(file=path_to_image)
                 self.display.image = self.photo
                 self.display.configure(image=self.display.image)
+
+            if(self.classification_map != None):
+                self.update_overlay()
+
         #if coercion failed
         except AttributeError:
             messagebox.showerror("Error", "An image has not been loaded")
@@ -391,12 +434,21 @@ class GUI:
             messagebox.showerror("Error", "Valid range for color channels is between 0 and 349")
 
     '''
-        Update the image that is currently displayed
+        Change the base image that is currently displayed
     '''
     def updateImage(self):
 
         #update the path image reader points at
         self.image_reader.update_image(self.image_path)
+
+        #clear the old classification tab
+        for widget in self.classifierTab.winfo_children():
+            widget.destroy()
+
+        self.classification_map = None
+
+        #rebuild the classification tab with the new updates
+        self.fill_classifier_tab()
 
         #get the default bands
         self.get_default_bands()
@@ -405,7 +457,7 @@ class GUI:
         self.image = self.image_reader.get_raw_image()
 
         #have imagereader update the display.png, returning the path to the image
-        path_to_image = self.image.get_three_channel(self.red, self.blue, self.green)
+        path_to_image = self.image.get_three_channel(self.red, self.green, self.blue,)
         
         #render the image pointed to the the path_to_image
         self.photo = tk.PhotoImage(file=path_to_image)
@@ -525,7 +577,9 @@ class GUI:
 
         #if an image and a classifier are already made
         if(self.image_name != 'placeholder.gif' and self.classification_map != None):
-            self.classifier.update_median_filtering_mode(self.median_filtering_mode)
+            self.classifier.update_median_filtering_mode(self.median_filtering_mode.get())
+        else:
+            pass
         
     '''
         Link to the how to use page

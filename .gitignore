@@ -17,3 +17,4 @@ Images/*.hdr
 #ignore the gui image
 display.gif
 display.png
+combined_image.png

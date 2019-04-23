@@ -99,7 +99,7 @@ class ClassificationMap:
                 image = numpy.zeros((self.predictions.shape[0], self.predictions.shape[1], 4))
 
                 #get the bool prediction matrix for the layer we are looking at 
-                prediction_matrix = self.layers[i].prediction_matrix
+                prediction_matrix = numpy.squeeze(self.layers[i].prediction_matrix)
 
                 #set the rgba values
                 image[:, :, 0] = prediction_matrix * self.layers[i].color[0]

@@ -279,5 +279,3 @@ if __name__ == "__main__":
 
     image = img.get_three_channel(233, 78, 13)
 
-    image = img.get_three_channel(100, 101, 102)
-
