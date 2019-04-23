@@ -291,8 +291,7 @@ class GUI:
             b = tk.Radiobutton( self.paramTab, 
                                 text=modes[i][0], 
                                 value=modes[i][1],
-                                variable=self.median_filtering_mode, 
-                                command=self.update_median_filter_mode
+                                variable=self.median_filtering_mode,
                                 )
             #set the first button as the default
             if(i == 0):
@@ -578,7 +577,9 @@ class GUI:
 
         #if an image and a classifier are already made
         if(self.image_name != 'placeholder.gif' and self.classification_map != None):
-            self.classifier.update_median_filtering_mode(self.median_filtering_mode)
+            self.classifier.update_median_filtering_mode(self.median_filtering_mode.get())
+        else:
+            pass
         
     '''
         Link to the how to use page
