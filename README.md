@@ -137,6 +137,7 @@
     <li>The displayed image is normalized per band not per image like the matlab code</li>
     <li>Median filtering can accept even numbers</li>
     <li>Navigating the Overlay tab is irritating and uninformative</li>
+    <li>Code is run via the Interpreter. There are options to compile Python and these may speed up run time but presently there is no scheme in place to implement this.
   </ul>
 
 <h2>Program Flow</h2>
