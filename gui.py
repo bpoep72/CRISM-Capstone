@@ -136,6 +136,8 @@ class GUI:
 
             #rebuild the classification tab with the new updates
             self.fill_classifier_tab()
+
+            self.update_overlay()
         else:
             messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
 
