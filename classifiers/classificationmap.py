@@ -34,7 +34,7 @@ class ClassificationMap:
             intensive
         '''
         self.distinct_colors = [
-        "#FFFF00", "#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059", "#7ED379",
+        "#FF0000", "#0000FF", "#00FF00", "#FFFF00", "#1CE6FF", "#FF34FF", "#FF4A46", "#008941",
         "#FFDBE5", "#7A4900", "#0000A6", "#63FFAC", "#B79762", "#004D43", "#8FB0FF", "#997D87",
         "#5A0007", "#809693", "#FF0000", "#1B4400", "#4FC601", "#3B5DFF", "#4A3B53", "#FF2F80",
         "#61615A", "#BA0900", "#6B7900", "#00C2A0", "#FFAA92", "#FF90C9", "#B903AA", "#D16100",
@@ -50,7 +50,8 @@ class ClassificationMap:
         "#5B4534", "#FDE8DC", "#404E55", "#0089A3", "#CB7E98", "#A4E804", "#324E72", "#6A3A4C",
         "#83AB58", "#001C1E", "#D1F7CE", "#004B28", "#C8D0F6", "#A3A489", "#806C66", "#222800",
         "#BF5650", "#E83000", "#66796D", "#DA007C", "#FF1A59", "#8ADBB4", "#1E0200", "#5B4E51",
-        "#C895C5", "#320033", "#FF6832", "#66E1D3", "#CFCDAC", "#D0AC94", "#00FF00", "#FF0000"
+        "#C895C5", "#320033", "#FF6832", "#66E1D3", "#CFCDAC", "#D0AC94", "#006FA6", "#A30059",
+        "#7ED379",
         ]
         
         #the predictions from the classifier double[][]
@@ -83,7 +84,7 @@ class ClassificationMap:
         self.current_view = numpy.zeros((self.original_image.rows, self.original_image.columns, 4))
         self.current_view = self.current_view.astype(numpy.uint8)
 
-        visible_layers = 0
+        visible_layers = -1
 
         #for each layer generate an image matrix for that layer
         for i in range(len(self.layers)):
