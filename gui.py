@@ -165,6 +165,14 @@ class GUI:
     # resets scroll region to encompass entire frame
     def on_frame_configure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    '''
+        Clear out the overlay, remove all the layers that are presently on the image
+        and reset all the radio buttons.
+    '''
+    def clear_overlay(self):
+
+        self.updateImage()
     
     '''
         Update both the image with the overlay and also the classification tab as it
@@ -185,16 +193,17 @@ class GUI:
             else:
                 self.classification_map.layers[i].is_visible = False
 
+        #get the mast we plan to put over the image
         overlay_mask = self.classification_map.overlay()
 
+        #ensure that the image is in its original state
         path = self.image.get_three_channel(self.red, self.green, self.blue)
-
         original_image = matplotlib.pyplot.imread(path)
-
         original_image = original_image * 255
 
         mask = numpy.zeros((self.image.rows, self.image.columns, 4))
 
+        #get the parts of the original image we need to keep
         keep = numpy.invert(numpy.sum(overlay_mask, axis=2) > 0)
 
         mask[:, :, 0] = keep
@@ -202,17 +211,17 @@ class GUI:
         mask[:, :, 2] = keep
         mask[:, :, 3] = True
 
-        #remove the pixels that will be replace from the original image
+        #remove the pixels that will be replaced from the original image
         original_image = numpy.multiply(original_image, mask)
 
+        #do this to keep the pixels that will not change and the alpha values
         combined_image = original_image
+        #add in the overlay mask
         combined_image[:, :, (0, 1, 2)] = numpy.add(original_image[:, :, (0, 1, 2)], overlay_mask[:, :, (0, 1, 2)])
-
         combined_image = combined_image.astype(numpy.uint8)
 
+        #overwrite the display image
         matplotlib.pyplot.imsave('display', combined_image)
-
-        #render the image pointed to the the path_to_image
         self.photo = tk.PhotoImage(file=path)
         self.display.image = self.photo
         self.display.configure(image=self.display.image)
