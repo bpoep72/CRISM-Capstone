@@ -230,7 +230,34 @@ class CRISMImage:
         return norm_band
 
     '''
+        Matlab opted to normalize the images across all 3 bands rather than
+        each band independantly. There are other methods that normalize the
+        the bands independently(norm_image and normalize_band) within this
+        project. This only affects the display of the image not the actual 
+        internal data so it is mostly a matter of preference which to display.
+
+        Params: 3xint, the channel numbers that you want to display
+        Returns: float[][][], the matrix representation of the image
+    '''
+    def normalize_three_band(self, channel_1, channel_2, channel_3):
+        
+        normalized_image = numpy.zeros((self.rows, self.columns, 3))
+
+        normalized_image[:, :, 0] = self.raw_image[:, :, channel_1]
+        normalized_image[:, :, 1] = self.raw_image[:, :, channel_2]
+        normalized_image[:, :, 2] = self.raw_image[:, :, channel_3]
+
+        min_value = numpy.amin(normalized_image)
+        max_value = numpy.amax(normalized_image)
+
+        normalized_image = (normalized_image - min_value) / (max_value - min_value)
+
+        return normalized_image
+
+
+    '''
         Normalize the whole image for the sake of gui display of the image. (0-1 Floating point).
+        This is a bit slow so we opt out of using it.
 
         Params: None
         Returns: numpy.float32 [][][], the normalized image
@@ -245,8 +272,9 @@ class CRISMImage:
         return norm_image
 
     '''
-        Get just the 3 bands that we need. Channels 1-3 will be RGB values that can be displayed using
-        matlibplot's imshow function
+        Create a png file that is the 3 bands that are requested by the caller.
+        Image is automatically placed at the same directory level of the caller.
+        Image name is 'display.png'.
 
         Params: 3xint, the channel numbers that you want to display
         Returns: str, the path where the image is stored at
@@ -255,11 +283,7 @@ class CRISMImage:
 
         file_name = 'display.png'
 
-        normalized_image = numpy.zeros((self.rows, self.columns, 3))
-
-        normalized_image[:, :, 0] = self.normalize_band(channel_1)
-        normalized_image[:, :, 1] = self.normalize_band(channel_2)
-        normalized_image[:, :, 2] = self.normalize_band(channel_3)
+        normalized_image = self.normalize_three_band(channel_1, channel_2, channel_3)
 
         pyplot.imsave(file_name, normalized_image)
 
