@@ -31,7 +31,7 @@
     <li>Ensure that Your PYTHONPATH now uses anaconda</li>
       <ul>
         <li>Windows type: where python</li>
-        <li>Expect: {A windows path}\anaconda3\{location of python executable}</li>
+        <li>Expect: {A windows path}\anaconda3\python</li>
         <br>
         <li>Debian Linux type: which python</li>
         <li>Expect: /home/{username}/anaconda3/python</li>
@@ -43,7 +43,7 @@
         <li>Anything listed there must be installed for the application to function</li>
       </ul>
     <li>Clone this repository somewhere local</li>
-    <li>Locate {ADD MAIN GUI FILE HERE PLEASE} within {PARENT FOLDER}</li>
+    <li>Locate gui.py within the folder you selected to clone this repository into</li>
     <li>Run the above file using CLI or Double Click</li>
   </ul>
   <br>
@@ -72,6 +72,8 @@
     <li>Ability to have multiple images open at once</li>
     <li>Ability to see the model files in application, kind of like when you use variable explorer in matlab</li>
     <li>A tab that shows current image data, like dimensions size, location</li>
+    <li>Ability to type in the labels you want to see rather than having to scroll through the whole list</li>
+    <li>A more efficient and fast version of the truncate median filtering function</li>
   </ul>
 <h2>How to Use The Application</h2>
   <ul>
@@ -111,14 +113,31 @@
       <li>Locate the Parameters tab on the right of the application</li>
       <li>If it is not open click it</li>
       <li>In the three fields the median filtering window size, ratioing window size and the number of highest slogs to use can all be changed to the desired values. (NOTE: the window size variables must both be odd number currently this is not checked before processing.)</li>
-      <li>Once you are happy with the selection click Update. Then the classifier will work to reclassify all the pertainate data. This can take quite some time as everything is calculated from scratch in this application (makes it taste better. heh. I need sleep).</li>
+      <li>Next select the median filtering mode. This is a radio button with 2 options. Mirrored was the best approximation of the original source that we discovered, though a second implementation which is a method constructed by Travis to simulate the exact output is given has the truncate option.</li>
+      <li>Once you are happy with the selection click Run Classifier. Then the classifier will work to reclassify all the pertainate data. This can take quite some time as everything is calculated from scratch in this application.</li>
+      <li>The application may act like it died if you click elsewhere on it at the moment. The easiest way to know when the classifier has completed its job is when the depression of the Run Classifier button caused by clicking it returns to its original state.</li>
     </ul>
-
+    <li><h3>Viewing output</h3>
+    <ul>
+      <li>Once the classifer has run the Overlay tab of of the GUI will now be populated with the layers</li>
+      <li>Click on the Overlay tab</li>
+      <li>Once the overlay tab is open you can toggle the display of a layer using the radio buttons. </li>
+      <li>The display is automatically updated whenever a selection changes</li>
+      <li>Currently the colors are assigned quite poorly. The colors are assigned based on which one first is selected and continues linearly from the top of the list to assign the colors.</li>
+    </ul>
   </ul>
 
 <h2>Known Issues</h2>
-
-
-<h2>Program Flow</h2>
-
+  <ul>
+    <li>Color selection of the GUI is poor and not informative</li>
+    <li>The scrollwheel does not work on the Overlay tab</li>
+    <li>Ratioing is seemingly inefficient</li>
+    <li>The Mirrored median filter does not reproduce the exact results of the matlab code and by consequence neither does the classification</li>
+    <li>The File Viewer tree does not load subdirectories and cannot have its root changed</li>
+    <li>The displayed image is normalized per band not per image like the matlab code</li>
+    <li>Median filtering can accept even numbers</li>
+    <li>Navigating the Overlay tab is irritating and uninformative</li>
+    <li>Code is run via the Interpreter. There are options to compile Python and these may speed up run time but presently there is no scheme in place to implement this.
+  </ul>
+  
 <h2>About</h2>
