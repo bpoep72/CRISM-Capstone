@@ -139,7 +139,5 @@
     <li>Navigating the Overlay tab is irritating and uninformative</li>
     <li>Code is run via the Interpreter. There are options to compile Python and these may speed up run time but presently there is no scheme in place to implement this.
   </ul>
-
-<h2>Program Flow</h2>
-
+  
 <h2>About</h2>
