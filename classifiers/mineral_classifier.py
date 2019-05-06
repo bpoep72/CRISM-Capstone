@@ -55,7 +55,7 @@ class MineralClassfier:
         self.mineral_classification_map = None
 
     '''
-        Runs the classifier when requested by the GUI
+        Runs the classifier completely when requested by the GUI
 
         Params:
             image, a CRISMImage
@@ -78,10 +78,67 @@ class MineralClassfier:
         self.neutral_image = self.ratioing(self.M_highest_slogs, self.ratioing_window_size)
 
         if (self.median_filtering_mode == 0):
-            self.median_image = self.median_filtering_mirror(self.median_filter_window_size)
+            self.median_image = self.median_filtering_mirror(self.median_filter_window_size, False)
         elif (self.median_filtering_mode == 1):
-            self.median_image = self.median_filtering_truncate(self.median_filter_window_size)
+            self.median_image = self.median_filtering_truncate(self.median_filter_window_size, False)
         
+        self.mineral_classification_map = self.mineral_classification()
+
+    '''
+        Runs the classifier through median filtering when requested by the GUI
+
+        Params:
+            image, a CRISMImage
+            ratioing_window_size, the size of the window to use for ratioing
+            M_highest_slogs, the number of slog values to use in the ratioing calculation
+            median_filter_window_size, the size of the window to use for median filtering
+            median_filtering_mode, a selector for the mode of median filtering to use
+    '''
+    def run_through_filtering(self, image, ratioing_window_size, M_highest_slogs, median_filter_window_size, median_filtering_mode):
+        
+        #set the attributes
+        self.image = image
+        self.ratioing_window_size = ratioing_window_size
+        self.M_highest_slogs = M_highest_slogs
+        self.median_filter_window_size = median_filter_window_size
+        self.median_filtering_mode = median_filtering_mode
+
+        #get the normalized image
+        self.normalized_image = self.neutral_pixel_norm()
+        self.neutral_image = self.ratioing(self.M_highest_slogs, self.ratioing_window_size)
+
+        if (self.median_filtering_mode == 0):
+            self.median_image = self.median_filtering_mirror(self.median_filter_window_size, False)
+        elif (self.median_filtering_mode == 1):
+            self.median_image = self.median_filtering_truncate(self.median_filter_window_size, False)
+
+    '''
+        Runs the median filtering again on an already filtered image
+
+        Params:
+            median_filter_window_size, the size of the window to use for median filtering
+            median_filtering_mode, a selector for the mode of median filtering to use
+    '''
+    def rerun_filter(self, median_filter_window_size, median_filtering_mode):
+        
+        #set the attributes
+        self.median_filter_window_size = median_filter_window_size
+        self.median_filtering_mode = median_filtering_mode
+
+        if (self.median_filtering_mode == 0):
+            self.median_image = self.median_filtering_mirror(self.median_filter_window_size, True)
+        elif (self.median_filtering_mode == 1):
+            self.median_image = self.median_filtering_truncate(self.median_filter_window_size, True)
+
+    '''
+        Runs just the classification algorithm on an image that may have gone through 
+        multiple iterations of median filtering
+
+        Params: None
+    '''
+    def finish_classification(self):
+        
+        #set the attributes
         self.mineral_classification_map = self.mineral_classification()
 
     '''
@@ -209,12 +266,16 @@ class MineralClassfier:
         in the mineral classifier.
 
         Params: window_size, the size of the window to use
+        rerun_check, a boolean that says if this is a first run or not
         Returns: numpy.double[][], the filtered image
     '''
-    def median_filtering_mirror(self, window_size):
-        filtered_image = self.neutral_image
-        IF1 = median_filter(self.neutral_image, size=[1, window_size], mode = "mirror")
-        tmp = abs(IF1 - self.neutral_image)
+    def median_filtering_mirror(self, window_size, rerun_check): 
+        if rerun_check == False:
+            filtered_image = self.neutral_image
+        else:
+            filtered_image = self.median_image
+        IF1 = median_filter(filtered_image, size=[1, window_size], mode = "mirror")
+        tmp = abs(IF1 - filtered_image)
         #MATLAB code used values from 1 to 248 here so I followed suit
         indices = tmp > numpy.mean(numpy.mean(tmp[:,0:248], axis=1)) + 1.5*numpy.mean(numpy.std(tmp[:,0:248], axis=1))
         filtered_image[indices] = IF1[indices]
@@ -227,30 +288,34 @@ class MineralClassfier:
         in the mineral classifier.
 
         Params: window_size, the size of the window to use
+        rerun_check, a boolean that says if this is a first run or not
         Returns: numpy.double[][], the filtered image
     '''
-    def median_filtering_truncate(self, window_size):
-        #NOTE: This is likely very inefficient and represents a first attempt at duplicating the functionality of the truncate 
-        #command from MATLAB. It takes quite a while to run.
-        filtered_image = self.neutral_image
+    def median_filtering_truncate(self, window_size, rerun_check):
+        if rerun_check == False:
+            filtered_image = self.neutral_image
+        else:
+            filtered_image = self.median_image
+        #NOTE: This is likely very inefficient, but it successfully duplicates the functionality of the truncate 
+        #option from MATLAB. It takes quite a while to run.
 
         #Attempt to replicate truncate functionality without having access to a truncate command
         left_temp_values = numpy.zeros([window_size // 2, self.image.columns * self.image.rows])
         right_temp_values = numpy.zeros([window_size // 2, self.image.columns * self.image.rows])
         for i in range(window_size // 2):
             for k in range(self.image.columns * self.image.rows):
-                left_temp_values[i,k] = numpy.median(self.neutral_image[k, 0:i+window_size//2+1])
-                right_temp_values[i,k] = numpy.median(self.neutral_image[k, self.image.dimensions-(i+window_size//2+1):self.image.dimensions])
+                left_temp_values[i,k] = numpy.median(filtered_image[k, 0:i+window_size//2+1])
+                right_temp_values[i,k] = numpy.median(filtered_image[k, self.image.dimensions-(i+window_size//2+1):self.image.dimensions])
 
         #Perform the actual median filtering
-        IF1 = median_filter(self.neutral_image, size=[1, window_size], mode = "constant")
+        IF1 = median_filter(filtered_image, size=[1, window_size], mode = "constant")
         #Reassign values close to the edge
         for i in range(left_temp_values.shape[0]):
             IF1[:,i] = left_temp_values[i]
             IF1[:,self.image.dimensions-i-1] = right_temp_values[i]
 
         #Code with functionality replicated from the MATLAB file
-        tmp = abs(IF1 - self.neutral_image)
+        tmp = abs(IF1 - filtered_image)
         #MATLAB code used values from 1 to 248 here so I followed suit
         indices = tmp > numpy.mean(numpy.mean(tmp[:,0:248], axis=1)) + 1.5*numpy.mean(numpy.std(tmp[:,0:248], axis=1, ddof=1))
         filtered_image[indices] = IF1[indices]
