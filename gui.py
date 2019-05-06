@@ -125,22 +125,27 @@ class GUI:
         Run the classifier and update the classifier tab
     '''
     def run_classification(self):
+        try:
+            if(self.image_name != 'placeholder.gif'):
+                self.updateParam()
+                assert self.ratioing_window_size > 0 and self.highest_slogs > 0 and self.median_filter_window_size > 0
+                assert self.median_filter_window_size % 2 == 1
+                self.classifier.run(self.image_reader.get_raw_image(), self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode.get())
+                self.classification_map = self.classifier.mineral_classification_map
 
-        if(self.image_name != 'placeholder.gif'):
-            self.updateParam()
-            self.classifier.run(self.image_reader.get_raw_image(), self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode.get())
-            self.classification_map = self.classifier.mineral_classification_map
+                #clear the old classification tab
+                for widget in self.classifierTab.winfo_children():
+                    widget.destroy()
 
-            #clear the old classification tab
-            for widget in self.classifierTab.winfo_children():
-                widget.destroy()
+                #rebuild the classification tab with the new updates
+                self.fill_classifier_tab()
 
-            #rebuild the classification tab with the new updates
-            self.fill_classifier_tab()
-
-            self.update_overlay()
-        else:
-            messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
+                self.update_overlay()
+            else:
+                messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
+        except AssertionError:
+            messagebox.showerror("Error", "All parameters must be positive. The median filter window size must be odd.")
+        
 
     '''
         For each mineral discovered by the classifier we need a widget to toggle the visibility
