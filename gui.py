@@ -127,6 +127,7 @@ class GUI:
     def run_classification(self):
 
         if(self.image_name != 'placeholder.gif'):
+            self.updateParam()
             self.classifier.run(self.image_reader.get_raw_image(), self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode.get())
             self.classification_map = self.classifier.mineral_classification_map
 
@@ -527,55 +528,12 @@ class GUI:
         matplotlib.image.imsave(fileName, img)
 
     '''
-        Update the classifier parameters then reperform all neccasary tasks to get the
-        updated map and then display it
+    Update the classifier parameters
     '''
     def updateParam(self):
-        #if an image has been loaded already
-        if(self.image_name != 'placeholder.gif'):
-            try:
-                #we only want to recalculate anything on the backend if anything changes that would impact the output
-
-                #if median filtering changed
-                if(self.median_filter_window_size != int(self.medianEntry.get())):
-                    #if median filtering and rationg or highest slogs changed
-                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):
-                        print('everything rerun')
-
-                        self.ratioing_window_size = int(self.ratioEntry.get())
-                        self.highest_slogs = int(self.slogsEntry.get())
-                        self.median_filter_window_size = int(self.medianEntry.get())
-                    
-                        self.classifier.update_ratioing_parameters(self.highest_slogs, self.ratioing_window_size)
-                    #only median filtering changed
-                    else:
-                        print('only median filtering')
-                        self.median_filter_window_size = int(self.medianEntry.get())
-                        
-                        self.classifier.update_median_filtering_parameters(self.median_filter_window_size)
-
-                #if median filtering did not change
-                else:
-                    #if ratioing or highest slogs changed
-                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):
-                        print('everything rerun')
-
-                        self.ratioing_window_size = int(self.ratioEntry.get())
-                        self.highest_slogs = int(self.slogsEntry.get())
-                        self.median_filter_window_size = int(self.medianEntry.get())
-                    
-                        self.classifier.update_ratioing_parameters(self.highest_slogs, self.ratioing_window_size)
-                    #nothing changed
-                    else:
-                        pass
-
-            # if the input was not a valid int
-            except:
-                messagebox.showerror("Error", "All values must be positive integers. The window sizes must be odd. The maximum number of slogs must be less than 50.")
-
-        #if an image has not already been loaded
-        else:     
-            messagebox.showerror("Error", "An image has not been loaded")
+        self.ratioing_window_size = int(self.ratioEntry.get())
+        self.highest_slogs = int(self.slogsEntry.get())
+        self.median_filter_window_size = int(self.medianEntry.get())
 
     '''
         Method called by reselection of the mode under the parameters tab of the GUI specific
