@@ -145,7 +145,67 @@ class GUI:
                 messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
         except AssertionError:
             messagebox.showerror("Error", "All parameters must be positive. The median filter window size must be odd.")
+
+    '''
+    Run the classification algorithm through the median filtering step so that median filtering can be run multiple times
+    '''
+    def run_through_median_filtering(self):
+        try:
+            if(self.image_name != 'placeholder.gif'):
+                self.updateParam()
+                assert self.ratioing_window_size > 0 and self.highest_slogs > 0 and self.median_filter_window_size > 0
+                assert self.median_filter_window_size % 2 == 1
+                self.classifier.run_through_filtering(self.image_reader.get_raw_image(), self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode.get())
+
+                #clear the old classification tab
+                for widget in self.classifierTab.winfo_children():
+                    widget.destroy()
+
+                #Activate buttons that are used after this step
+                self.medFilterAgain.config(state=tk.NORMAL)
+                self.finishClassification.config(state=tk.NORMAL)
+            else:
+                messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
+        except AssertionError:
+            messagebox.showerror("Error", "All parameters must be positive. The median filter window size must be odd.")
         
+    '''
+    Run the median filtering step again
+    '''
+    def rerun_median_filtering(self):
+        try:
+            if(self.image_name != 'placeholder.gif'):
+                self.updateParam()
+                assert self.median_filter_window_size > 0
+                assert self.median_filter_window_size % 2 == 1
+                self.classifier.rerun_filter(self.median_filter_window_size, self.median_filtering_mode.get())
+
+                #clear the old classification tab
+                for widget in self.classifierTab.winfo_children():
+                    widget.destroy()
+            else:
+                messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
+        except AssertionError:
+            messagebox.showerror("Error", "All parameters must be positive. The median filter window size must be odd.")
+
+    '''
+    Finish off the classification algorithm after running the median filtering algorithm multiple times
+    '''
+    def finish_classification(self):
+        if(self.image_name != 'placeholder.gif'):
+            self.classifier.finish_classification()
+            self.classification_map = self.classifier.mineral_classification_map
+
+            #clear the old classification tab
+            for widget in self.classifierTab.winfo_children():
+                widget.destroy()
+
+            #rebuild the classification tab with the new updates
+            self.fill_classifier_tab()
+
+            self.update_overlay()
+        else:
+            messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
 
     '''
         For each mineral discovered by the classifier we need a widget to toggle the visibility
@@ -317,7 +377,13 @@ class GUI:
             b.grid(columnspan=2, row=(4 + i) )
         
         self.paramUpdate = tk.Button(self.paramTab, text="Run Classification", command=self.run_classification)
+        self.throughMedFilter = tk.Button(self.paramTab, text="Run Classification Through Median Filtering", command=self.run_through_median_filtering)
+        self.medFilterAgain = tk.Button(self.paramTab, text="Run Median Filtering Again", state=tk.DISABLED, command=self.rerun_median_filtering)
+        self.finishClassification = tk.Button(self.paramTab, text="Finish Classification After Median Filter", state=tk.DISABLED, command=self.finish_classification)
         self.paramUpdate.grid(row=(4 + len(modes)) + 2, columnspan=3)
+        self.throughMedFilter.grid(row=(4 + len(modes)) + 3, columnspan=3)
+        self.medFilterAgain.grid(row=(4 + len(modes)) + 4, columnspan=3)
+        self.finishClassification.grid(row=(4 + len(modes)) + 5, columnspan=3)
 
     def fill_classifier_tab(self):
 
