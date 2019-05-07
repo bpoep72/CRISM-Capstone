@@ -108,14 +108,15 @@
       <li>In the three fields the channel that will represent the red, green and blue channels can be replaced by your desired bands</li>
       <li>Once you are happy with the selected bands click update. There may be a slight pause then the image should be updated to display the updated image using the input bands.</li>
     </ul>
-    <li><h3 style="text-decoration:underline">Changing Rationing/Median Filtering Parameters</h3></li>
+    <li><h3 style="text-decoration:underline">Changing Ratioing/Median Filtering Parameters</h3></li>
     <ul>
       <li>Locate the Parameters tab on the right of the application</li>
       <li>If it is not open click it</li>
-      <li>In the three fields the median filtering window size, ratioing window size and the number of highest slogs to use can all be changed to the desired values. (NOTE: the window size variables must both be odd number currently this is not checked before processing.)</li>
+      <li>In the three fields the median filtering window size, ratioing window size and the number of highest slogs to use can all be changed to the desired values. (NOTE: the median filtering window size variable must be an odd number.)</li>
       <li>Next select the median filtering mode. This is a radio button with 2 options. Mirrored was the best approximation of the original source that we discovered, though a second implementation which is a method constructed by Travis to simulate the exact output is given has the truncate option.</li>
       <li>Once you are happy with the selection click Run Classifier. Then the classifier will work to reclassify all the pertainate data. This can take quite some time as everything is calculated from scratch in this application.</li>
       <li>The application may act like it died if you click elsewhere on it at the moment. The easiest way to know when the classifier has completed its job is when the depression of the Run Classifier button caused by clicking it returns to its original state.</li>
+      <li>If you want to run multiple iterations of median filtering on the image before classifying the image, start the process by using the Run Classification Through Median Filtering button. This process will include your first iteration of median filtering. You can then change the window size and mode if you desire and do another iteration of filtering on the image that has already been filtered by clicking on the Run Median Filtering Again button. After you have run the median filtering as many times as you want, you can finish the classification by clicking the Finish Classification After Median Filtering button.</li>
     </ul>
     <li><h3>Viewing output</h3>
     <ul>
@@ -135,7 +136,6 @@
     <li>The Mirrored median filter does not reproduce the exact results of the matlab code and by consequence neither does the classification</li>
     <li>The File Viewer tree does not load subdirectories and cannot have its root changed</li>
     <li>The displayed image is normalized per band not per image like the matlab code</li>
-    <li>Median filtering can accept even numbers</li>
     <li>Navigating the Overlay tab is irritating and uninformative</li>
     <li>Code is run via the Interpreter. There are options to compile Python and these may speed up run time but presently there is no scheme in place to implement this.
   </ul>

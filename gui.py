@@ -125,9 +125,75 @@ class GUI:
         Run the classifier and update the classifier tab
     '''
     def run_classification(self):
+        try:
+            if(self.image_name != 'placeholder.gif'):
+                self.updateParam()
+                assert self.ratioing_window_size > 0 and self.highest_slogs > 0 and self.median_filter_window_size > 0
+                assert self.median_filter_window_size % 2 == 1
+                self.classifier.run(self.image_reader.get_raw_image(), self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode.get())
+                self.classification_map = self.classifier.mineral_classification_map
 
+                #clear the old classification tab
+                for widget in self.classifierTab.winfo_children():
+                    widget.destroy()
+
+                #rebuild the classification tab with the new updates
+                self.fill_classifier_tab()
+
+                self.update_overlay()
+            else:
+                messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
+        except AssertionError:
+            messagebox.showerror("Error", "All parameters must be positive. The median filter window size must be odd.")
+
+    '''
+    Run the classification algorithm through the median filtering step so that median filtering can be run multiple times
+    '''
+    def run_through_median_filtering(self):
+        try:
+            if(self.image_name != 'placeholder.gif'):
+                self.updateParam()
+                assert self.ratioing_window_size > 0 and self.highest_slogs > 0 and self.median_filter_window_size > 0
+                assert self.median_filter_window_size % 2 == 1
+                self.classifier.run_through_filtering(self.image_reader.get_raw_image(), self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode.get())
+
+                #clear the old classification tab
+                for widget in self.classifierTab.winfo_children():
+                    widget.destroy()
+
+                #Activate buttons that are used after this step
+                self.medFilterAgain.config(state=tk.NORMAL)
+                self.finishClassification.config(state=tk.NORMAL)
+            else:
+                messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
+        except AssertionError:
+            messagebox.showerror("Error", "All parameters must be positive. The median filter window size must be odd.")
+        
+    '''
+    Run the median filtering step again
+    '''
+    def rerun_median_filtering(self):
+        try:
+            if(self.image_name != 'placeholder.gif'):
+                self.updateParam()
+                assert self.median_filter_window_size > 0
+                assert self.median_filter_window_size % 2 == 1
+                self.classifier.rerun_filter(self.median_filter_window_size, self.median_filtering_mode.get())
+
+                #clear the old classification tab
+                for widget in self.classifierTab.winfo_children():
+                    widget.destroy()
+            else:
+                messagebox.showerror("Error", "No image has been loaded yet. Please load an image.")
+        except AssertionError:
+            messagebox.showerror("Error", "All parameters must be positive. The median filter window size must be odd.")
+
+    '''
+    Finish off the classification algorithm after running the median filtering algorithm multiple times
+    '''
+    def finish_classification(self):
         if(self.image_name != 'placeholder.gif'):
-            self.classifier.run(self.image_reader.get_raw_image(), self.ratioing_window_size, self.highest_slogs, self.median_filter_window_size, self.median_filtering_mode.get())
+            self.classifier.finish_classification()
             self.classification_map = self.classifier.mineral_classification_map
 
             #clear the old classification tab
@@ -321,7 +387,13 @@ class GUI:
             b.grid(columnspan=2, row=(4 + i) )
         
         self.paramUpdate = tk.Button(self.paramTab, text="Run Classification", command=self.run_classification)
+        self.throughMedFilter = tk.Button(self.paramTab, text="Run Classification Through Median Filtering", command=self.run_through_median_filtering)
+        self.medFilterAgain = tk.Button(self.paramTab, text="Run Median Filtering Again", state=tk.DISABLED, command=self.rerun_median_filtering)
+        self.finishClassification = tk.Button(self.paramTab, text="Finish Classification After Median Filter", state=tk.DISABLED, command=self.finish_classification)
         self.paramUpdate.grid(row=(4 + len(modes)) + 2, columnspan=3)
+        self.throughMedFilter.grid(row=(4 + len(modes)) + 3, columnspan=3)
+        self.medFilterAgain.grid(row=(4 + len(modes)) + 4, columnspan=3)
+        self.finishClassification.grid(row=(4 + len(modes)) + 5, columnspan=3)
 
     def fill_classifier_tab(self):
 
@@ -540,55 +612,12 @@ class GUI:
         matplotlib.image.imsave(fileName, img)
 
     '''
-        Update the classifier parameters then reperform all neccasary tasks to get the
-        updated map and then display it
+    Update the classifier parameters
     '''
     def updateParam(self):
-        #if an image has been loaded already
-        if(self.image_name != 'placeholder.gif'):
-            try:
-                #we only want to recalculate anything on the backend if anything changes that would impact the output
-
-                #if median filtering changed
-                if(self.median_filter_window_size != int(self.medianEntry.get())):
-                    #if median filtering and rationg or highest slogs changed
-                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):
-                        print('everything rerun')
-
-                        self.ratioing_window_size = int(self.ratioEntry.get())
-                        self.highest_slogs = int(self.slogsEntry.get())
-                        self.median_filter_window_size = int(self.medianEntry.get())
-                    
-                        self.classifier.update_ratioing_parameters(self.highest_slogs, self.ratioing_window_size)
-                    #only median filtering changed
-                    else:
-                        print('only median filtering')
-                        self.median_filter_window_size = int(self.medianEntry.get())
-                        
-                        self.classifier.update_median_filtering_parameters(self.median_filter_window_size)
-
-                #if median filtering did not change
-                else:
-                    #if ratioing or highest slogs changed
-                    if(int(self.ratioEntry.get()) != self.ratioing_window_size or self.highest_slogs != int(self.slogsEntry.get())):
-                        print('everything rerun')
-
-                        self.ratioing_window_size = int(self.ratioEntry.get())
-                        self.highest_slogs = int(self.slogsEntry.get())
-                        self.median_filter_window_size = int(self.medianEntry.get())
-                    
-                        self.classifier.update_ratioing_parameters(self.highest_slogs, self.ratioing_window_size)
-                    #nothing changed
-                    else:
-                        pass
-
-            # if the input was not a valid int
-            except:
-                messagebox.showerror("Error", "All values must be positive integers. The window sizes must be odd. The maximum number of slogs must be less than 50.")
-
-        #if an image has not already been loaded
-        else:     
-            messagebox.showerror("Error", "An image has not been loaded")
+        self.ratioing_window_size = int(self.ratioEntry.get())
+        self.highest_slogs = int(self.slogsEntry.get())
+        self.median_filter_window_size = int(self.medianEntry.get())
 
     '''
         Method called by reselection of the mode under the parameters tab of the GUI specific
