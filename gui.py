@@ -148,16 +148,16 @@ class GUI:
     def make_mineral(self, index):
         # creates the label and radio button
         tempMineral = tk.Label(self.frame, text=self.classification_map.layers[index].mineral_name)
-        tempMineral.grid(row=index*3, column=0, rowspan=2)
+        tempMineral.grid(row=index*3+1, column=0, rowspan=2)
         tempMineralButton = tk.IntVar()
-        tempYes = tk.Radiobutton(self.frame, text="Yes", variable=tempMineralButton, value=1, command=self.update_overlay)
-        tempYes.grid(row=index*3, column=1)
-        tempNo = tk.Radiobutton(self.frame, text="No", variable=tempMineralButton, value=0, command=self.update_overlay)
+        tempYes = tk.Radiobutton(self.frame, text="Visible", variable=tempMineralButton, value=1, command=self.update_overlay)
+        tempYes.grid(row=index*3+1, column=1)
+        tempNo = tk.Radiobutton(self.frame, text="Not Visible", variable=tempMineralButton, value=0, command=self.update_overlay)
         tempNo.select()
-        tempNo.grid(row=index*3+1, column=1)
+        tempNo.grid(row=index*3+2, column=1)
         
         # blank label for spacing
-        tk.Label(self.frame, text="").grid(row=index*3+2, column=0, columnspan=2)
+        tk.Label(self.frame, text="").grid(row=index*3+3, column=0, columnspan=2)
         
         # puts the items within the array
         self.mineralButtonArray.append(tempMineralButton)
@@ -172,7 +172,17 @@ class GUI:
     '''
     def clear_overlay(self):
 
-        self.updateImage()
+        #clear the old classification tab
+        for widget in self.classifierTab.winfo_children():
+            widget.destroy()
+
+        #rebuild the classification tab
+        self.fill_classifier_tab()
+
+        #update the overlay to reset state and the image
+        self.update_overlay()
+
+        self.frame.update()
     
     '''
         Update both the image with the overlay and also the classification tab as it
@@ -326,6 +336,9 @@ class GUI:
             self.canvas.pack(side="left", fill="both", expand=True)
             self.canvas.create_window((2,12), window=self.frame, anchor="nw", tags="self.frame")
             self.frame.bind("<Configure>", self.on_frame_configure)
+
+            clear_all_btn = tk.Button(self.frame, text="Clear Overlay", command=self.clear_overlay)
+            clear_all_btn.grid(row=0, columnspan=3)
             
             self.mineralButtonArray = []
             
